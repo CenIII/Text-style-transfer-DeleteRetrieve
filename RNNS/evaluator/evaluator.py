@@ -1,4 +1,3 @@
-
 import Measure
 
 
@@ -13,7 +12,7 @@ class Evaluator(object):
 
 
 	def dumpOuts(self):
-		
+
 	def evaluate(self, loader, net):
 
 		# predict

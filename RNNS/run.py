@@ -1,12 +1,14 @@
-
-
+from loader import LoadHandler
+from evaluator import Evaluator
+from trainer import Trainer
+from model import Seq2seq, Criterion
 
 def runTrain():
-	loader = 
-	net = 
-	crit = 
-	trainer = 
-	evaluator = 
+	loader = LoadHandler()
+	net = Seq2seq()
+	crit = Criterion()
+	trainer = Trainer()
+	evaluator = Evaluator()
 	trainer.train(loader, net, crit, evaluator)
 
 def runVal():
