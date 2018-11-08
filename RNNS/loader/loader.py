@@ -34,7 +34,7 @@ class YelpDataset(Dataset):
 
 	def extractMarker(self, sentence, style=self.POS):
 		# an API wrapper
-		
+
 		return brkSentence, marker
 
 	def retrieveTargetMarker(self, brkSentence, targetStyle=self.NEG):
@@ -53,11 +53,7 @@ class YelpDataset(Dataset):
 class LoaderHandler(object):
 	"""docstring for LoaderHandler"""
 	def __init__(self, config):
-		super(LoaderHandler, self).__init__()
-		
-		self.ldTrain = DataLoader(YelpDataset(config['trainfile']),
-			batch_size=self.batchsize, shuffle=True, num_workers=config['train_par']['num_workers'], pin_memory=False)
-		self.ldDev = DataLoader(YelpDataset(config['devfile']),
-			batch_size=self.batchsize, shuffle=False, num_workers=config['train_par']['num_workers'], pin_memory=False)
-		self.ldDevEval = DataLoader(YelpDataset(config['devfile']),
-			batch_size=1, shuffle=False, pin_memory=False)
+		super(LoaderHandler, self).__init__()	
+		self.ldTrain = DataLoader(YelpDataset(config['trainfile']),batch_size=self.batchsize, shuffle=True, num_workers=2, pin_memory=False)
+		self.ldDev = DataLoader(YelpDataset(config['devfile']),batch_size=self.batchsize, shuffle=False, num_workers=2, pin_memory=False)
+		self.ldDevEval = DataLoader(YelpDataset(config['devfile']),batch_size=1, shuffle=False, pin_memory=False)

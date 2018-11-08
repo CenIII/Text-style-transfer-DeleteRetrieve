@@ -2,28 +2,29 @@ import numpy as np
 
 class Trainer(object):
 	"""docstring for Trainer"""
-	def __init__(self, config):
+	def __init__(self, config, savePath):
 		super(Trainer, self).__init__()
 		self.lr = config['lr']
-		self.save_path = os.path.join(config['exp_path'], config['opt'].exp)
-		os.makedirs(self.save_path, exist_ok=True)
+		self.savePath = savePath #os.path.join(config['exp_path'], config['opt'].exp)
+		os.makedirs(self.savePath, exist_ok=True)
 
 	def devLoss(self, ld, net, crit):
 		ld = iter(ld)
 		devLoss = np.zeros(len(ld))
-		for itr in range(len(ld)):
-			inputs = next(ld)
-			outputs = net(inputs)
-			loss = crit(outputs)
-			devLoss[itr] = loss
+		with torch.set_grad_enabled(False):
+			for itr in range(len(ld)):
+				inputs = next(ld)
+				outputs = net(inputs)
+				loss = crit(outputs)
+				devLoss[itr] = loss
 		devLoss = devLoss.mean()
 		print('Average loss on dev set: '+str(devLoss))
 		return devLoss
 
 	def saveNet(self,net,isBest=False):
 		fileName = 'bestmodel.pth.tar' if isBest else 'checkpoint.pth.tar' 
-		filePath = os.path.join(self.save_path, fileName)
-		os.makedirs(self.save_path, exist_ok=True)
+		filePath = os.path.join(self.savePath, fileName)
+		os.makedirs(self.savePath, exist_ok=True)
 		torch.save({'state_dict': net.state_dict()})
 		if isBest:
 			print('>>> Saving best model...')

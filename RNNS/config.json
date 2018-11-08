@@ -1,105 +1,23 @@
 {
-  "data_provider":  ["data.provider","DataProvider"],
-  "model":          ["model.posenet","PoseNet"],
-  "criterion":      ["model.posenet","Criterion"],
-  "trainer":        ["trainer.trainer","Trainer"],
-  "predictor":      ["tester.predictor", "Predictor"],
-  "project_root_dir":"/home/chuancen/CVResearch/HumanPoseTracking/pose-tracking-ae",
-  "exp_path": "./exp",
-  "mp4path": "/scratch/jiadeng_fluxoe/chuancen/PJDATA/mp4/images/",
-  "mp4outpath": "/scratch/jiadeng_fluxoe/chuancen/PJDATA/mp4/outs/",
-  "posetrack": {
-    "data_loader":    ["data.loaders.posetrack", "PoseTrackDataLoader"],
-    "evaluator":      ["tester.evaluators.posetrack", "PoseTrackEvaluator"],
-    "data_path": {
-      "root": "/scratch/jiadeng_fluxoe/chuancen/PJDATA/PoseTrack/posetrack_data",
-      "train": {
-        "imgs": "",
-        "anns": "annotations/train"
-      },
-      "val": {
-        "imgs": "",
-        "anns": "annotations/val"
-      },
-      "test": {
-        "imgs": "", 
-        "anns": "annotations/test"
-      }
-    },
-    "eval_tool_path": "/scratch/jiadeng_fluxoe/chuancen/PJDATA/PoseTrack/poseval/py",
-    "train_par": {
-      "train_iters": 600,
-      "lr_dec_iters": 223200,
-      "learning_rate": 1e-4,
-      "reg_lambda": 1e-7,
-      "loss": [
-        ["push_loss", 1e-3],
-        ["pull_loss", 1e-3],
-        ["detection_loss", 1]
-      ]
-    },
-    "pred_par": {
-      "det_thr": 0.32,
-      "tag_thr": 1.5
-    }
-  },
-
-  "coco": {
-    "data_loader":    ["data.loaders.coco", "COCODataLoader"],
-    "evaluator":      ["tester.evaluators.coco", "COCOEvaluator"],
-    "data_path": {
-      "root": "/home/chuancen/CVResearch/HumanPoseTracking/PJDATA/COCO/",
-      "train": {
-        "imgs": "images/train2017",
-        "anns": "annotations/person_keypoints_train2017.json"
-      },
-      "val": {
-        "imgs": "images/val2017",
-        "anns": "annotations/person_keypoints_val2017.json"
-      },
-      "test": {
-        "imgs": "images/test2017", 
-        "anns": "annotations/image_info_test2017.json"
-      }
-    },
-    "train_par": {
-      "train_iters": 10000,
-      "lr_dec_iters": 240000,
-      "learning_rate": 2e-4,
-      "loss": [
-        ["push_loss", 1e-3],
-        ["pull_loss", 1e-3],
-        ["detection_loss", 1]
-      ]
-    },
-    "pred_par": {
-      "det_thr": 0.1,
-      "tag_thr": 1.0
-    }
-  },
-
-  "model_par": {
-    "nstack": 4,
-    "inp_dim": 256,
-    "oup_dim": 68,        
-    "num_parts": 17,
-    "increase": 128,
-    "bn": 0
-  },
+  "expPath": "./exp",
   
-  "train_par": {
-    "batchsize": 30,
-    "input_res": 512,
-    "output_res": 128,
-    "num_loss": 4,
-    "max_num_people": 30,
-    "num_workers": 2, 
-    "val_img_num": 100
+  "loader": {
+    "batchSize": 128,
+    "trainFile": "Data/yelp/sentiment.train",
+    "devFile": "Data/yelp/sentiment.dev",
+    "testFile": "Data/yelp/sentiment.test"
   },
 
-  "pred_par": {
-    "det_thr": 0.1,
-    "tag_thr": 1.0
-  }
+  "trainer":{
+    "lr": 1e-4
+  },
+
+  "evaluator":{
+
+  },
+
+  "model": {
+
+  },
 
 }
