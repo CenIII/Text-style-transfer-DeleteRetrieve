@@ -33,19 +33,25 @@ class Seq2seq(nn.Module):
 
     """
 
-    def __init__(self, encoder, decoder, decode_function=F.log_softmax):
+    def __init__(self, decode_function=F.log_softmax):
         super(Seq2seq, self).__init__()
-        self.encoder = encoder
-        self.decoder = decoder
+        self.embeddings = 
+        self.encoder0 = 
+        self.encoder1 = 
+        self.decoder = 
         self.decode_function = decode_function
 
     def flatten_parameters(self):
         self.encoder.rnn.flatten_parameters()
         self.decoder.rnn.flatten_parameters()
 
-    def forward(self, input_variable, input_lengths=None, target_variable=None,
+    def forward(self, input_variable0, input_variable1, input_lengths0=None, input_lengths1=None, target_variable=None,
                 teacher_forcing_ratio=0):
-        encoder_outputs, encoder_hidden = self.encoder(input_variable, input_lengths)
+    	self.
+        encoder_outputs0, encoder_hidden0 = self.encoder0(input_variable0, input_lengths0)
+        encoder_outputs1, encoder_hidden1 = self.encoder1(input_variable1, input_lengths1)
+        encoder_outputs = torch.cat((encoder_outputs0,encoder_outputs1),1)
+        encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),1)
         result = self.decoder(inputs=target_variable,
                               encoder_hidden=encoder_hidden,
                               encoder_outputs=encoder_outputs,

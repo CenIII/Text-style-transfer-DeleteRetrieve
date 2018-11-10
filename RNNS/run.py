@@ -8,10 +8,10 @@ def runTrain(config):
 	loader = LoadHandler(config['loader'])
 	if config['opt'].continue_exp:
 		net = Tools.reloadModel(config)
-	net = Seq2seq(config['model'])
-	crit = Criterion(config['crit'])
+	net = None#Seq2seq(config['model'])
+	crit = None#Criterion(config['crit'])
 	trainer = Trainer(config['trainer'],config['expPath'])
-	evaluator = Evaluator(config['evaluator'],config['expPath'])
+	evaluator = None#Evaluator(config['evaluator'],config['expPath'])
 	trainer.train(loader, net, crit, evaluator)
 
 def runVal():
