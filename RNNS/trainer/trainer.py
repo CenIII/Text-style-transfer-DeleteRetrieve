@@ -34,7 +34,7 @@ class Trainer(object):
 			print('Saving model...')
 		
 	def train(self, loader, net, crit, evaluator):
-		self.optimizer = None #torch.optim.RMSprop(net.parameters(), self.lr)
+		self.optimizer = torch.optim.Adam(net.parameters(), self.lr)
 		log = None
 		dispText = {'loss1':0,'loss2':1} #TODO: ...
 		# train

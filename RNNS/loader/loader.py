@@ -55,7 +55,21 @@ class YelpDataset(Dataset):
 				if style_count.get(tmp, 0) > maxc:
 					maxc = style_count.get(tmp, 0)
 					cur = (tmp, l ,l+n)
-		return " ".join(words[:cur[1]]) + " <unk> " + " ".join(words[cur[2]:]), cur[0]
+		marker = cur[0].split(' ')
+		return words[:cur[1]]+['<unk>']+words[cur[2]:], marker
+		# maxc = 0
+		# words = sentence
+		# if style == self.POS:
+		# 	style_count = self.pos_style_dict
+		# elif style == self.NEG:
+		# 	style_count = self.neg_style_dict
+		# for n in range(1, 5):
+		# 	for l in range(0, len(words)-n+1):
+		# 		tmp = words[l:l+n]
+		# 		if style_count.get(tmp, 0) > maxc:
+		# 			maxc = style_count.get(tmp, 0)
+		# 			cur = (tmp, l ,l+n)
+		# return words[:cur[1]] + ["<unk>"] + words[cur[2]:], cur[0]
 
 	# def retrieveTargetMarker(self, brkSentence, targetStyle=self.NEG):
 	# 	# an API wrapper
@@ -63,8 +77,10 @@ class YelpDataset(Dataset):
 
 	# 	return targetMarker
 
-	def applyNoise(self):
-		pass
+	def applyNoise(self, marker):
+		n_marker = []
+
+		return n_marker
 
 	def word2index(self,sList):
 		resList = []
@@ -78,12 +94,15 @@ class YelpDataset(Dataset):
 			indArr.append(self.eos_id)
 			indArr = np.array(indArr)
 			resList.append(indArr)
-		return indArr
+		return resList
 
 	def loadOne(self,idx):
 		style, sentence = self.data[idx]
 		# print('style: '+str(style)+' sentence:'+str(sentence))
 		brkSentence, marker = self.extractMarker(sentence, style=style)
+		print("brk: "+str(brkSentence))
+		print("marker: "+str(marker))
+
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
 		brkSentence, marker, sentence = self.word2index([brkSentence, marker, sentence])
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])

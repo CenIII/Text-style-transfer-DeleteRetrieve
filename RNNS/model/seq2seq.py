@@ -1,8 +1,10 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from EncoderRNN import EncoderRNN
-from DecoderRNN import DecoderRNN
+from .EncoderRNN import EncoderRNN
+from .DecoderRNN import DecoderRNN
 import pickle
+import numpy as np
 
 class Seq2seq(nn.Module):
 	""" Standard sequence-to-sequence architecture with configurable encoder
@@ -36,24 +38,24 @@ class Seq2seq(nn.Module):
 
 	"""
 
-	def __init__(self, embedding=None, wordDict=None, hidden_size=100, input_dropout_p=0, max_len=100, dropout_p=0, n_layers=1, bidirectional=False, rnn_cell='gru', decode_function=F.log_softmax):
+	def __init__(self, embedding=None, wordDict=None, hidden_size=300, input_dropout_p=0, max_len=100, dropout_p=0, n_layers=1, bidirectional=False, rnn_cell='gru', decode_function=F.log_softmax):
 		super(Seq2seq, self).__init__()
 		if embedding==None:
 			print('no embedding given. please try again')
 			exit(0)
-		embedding = np.load(embedding)
+		embedding = torch.FloatTensor(np.load(embedding))
 		vocab_size = len(embedding)
 		with open(wordDict,"rb") as fp:
 			self.wordDict = pickle.load(fp)
 		sos_id = self.wordDict['@@START@@']
 		eos_id = self.wordDict['@@END@@']
-		self.encoder0 = EncoderRNN(self, vocab_size, max_len, hidden_size,
+		self.encoder0 = EncoderRNN(vocab_size, max_len, hidden_size, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
-				embedding=embedding, update_embedding=False):
-		self.encoder1 = EncoderRNN(self, vocab_size, max_len, hidden_size,
+				embedding=embedding, update_embedding=False)
+		self.encoder1 = EncoderRNN(vocab_size, max_len, hidden_size,
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
-				embedding=embedding, update_embedding=False):
-		self.decoder = DecoderRNN(self, vocab_size, max_len, hidden_size, sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
+				embedding=embedding, update_embedding=False)
+		self.decoder = DecoderRNN(vocab_size, max_len, hidden_size, sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=True)
 		self.decode_function = decode_function
 
@@ -66,9 +68,9 @@ class Seq2seq(nn.Module):
 		encoder_outputs0, encoder_hidden0 = self.encoder0(inputs['brk_sentence'], inputs['bs_inp_lengths'])
 		encoder_outputs1, encoder_hidden1 = self.encoder1(inputs['marker'], inputs['mk_inp_lengths'])
 		encoder_outputs = torch.cat((encoder_outputs0,encoder_outputs1),1)
-		encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),1)
+		# encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),0)
 		result = self.decoder(inputs=target_variable,
-							  encoder_hidden=encoder_hidden,
+							  encoder_hidden=encoder_hidden0,
 							  encoder_outputs=encoder_outputs,
 							  function=self.decode_function,
 							  teacher_forcing_ratio=teacher_forcing_ratio)
@@ -91,7 +93,7 @@ class Criterion(object):
 	def forward(self, outputs, inputs):
 		labels = inputs['sentence']
 		labels_lengths = inputs['st_inp_lengths']
-		
+
 			
 
 

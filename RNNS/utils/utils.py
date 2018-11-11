@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 def subset(array):
     result = []
@@ -22,7 +23,9 @@ def seq_collate(batch):
 		packed = np.zeros([batchSize, maxLen])
 		for i in range(batchSize):
 			packed[i][:lengths[i]] = batch[i][ind]
-		return packed, lengths
+		lengths = np.array(lengths)
+		inds = np.argsort(lengths)[::-1]
+		return torch.LongTensor(packed[inds]), torch.tensor(lengths[inds])
 	brk_sentence, seqLengths = extract(0)
 	marker, mkLengths = extract(1) 
 	sent, stLengths = extract(2)

@@ -1,7 +1,7 @@
 from loader import LoaderHandler
 # from evaluator import Evaluator
 from trainer import Trainer
-# from model import Seq2seq, Criterion
+from model import Seq2seq#, Criterion
 from utils import ConfigParser, Tools
 
 def runTrain(config):
