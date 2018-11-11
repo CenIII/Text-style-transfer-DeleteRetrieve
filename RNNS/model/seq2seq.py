@@ -73,16 +73,16 @@ class Seq2seq(nn.Module):
 							  encoder_hidden=encoder_hidden0,
 							  encoder_outputs=encoder_outputs,
 							  function=self.decode_function,
-							  teacher_forcing_ratio=teacher_forcing_ratio)
+							  teacher_forcing_ratio=teacher_forcing_ratio,
+							  outputs_maxlen=max(inputs['st_inp_lengths']))
 		return result
 
 
 
-class Criterion(object):
+class Criterion(nn.Module):
 	"""docstring for Criterion"""
-	def __init__(self, arg):
+	def __init__(self, config):
 		super(Criterion, self).__init__()
-		self.arg = arg
 
 	def LanguageModelLoss(self):
 		pass
@@ -92,8 +92,18 @@ class Criterion(object):
 
 	def forward(self, outputs, inputs):
 		labels = inputs['sentence']
-		labels_lengths = inputs['st_inp_lengths']
+		lengths = inputs['st_inp_lengths']
+		decoder_outputs = outputs[0]
+		decoder_outputs = torch.cat([torch.tensor(k).unsqueeze(1) for k in decoder_outputs],1) #[batch, seqlength, vocabsize]
 
+		batchSize = len(labels)
+		loss = 0
+		for i in range(batchSize):
+			wordLogPs = decoder_outputs[i][:lengths[i]]
+			gtWdIndices = labels[i][:lengths[i]]
+			loss += - torch.sum(torch.gather(wordLogPs,1,gtWdIndices.unsqueeze(1))) # [wordLogPs[:,index] for index in gtWdIndices])
+		loss = loss/batchSize
+		return loss
 			
 
 

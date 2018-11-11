@@ -1,7 +1,7 @@
 {
   "expPath": "./exp",
   "loader": {
-    "batchSize": 3,
+    "batchSize": 32,
     "wordDict": "../AuxData/wordDict",
     "trainFile": "../Data/yelp/sentiment.train",
     "devFile": "../Data/yelp/sentiment.dev",
@@ -19,5 +19,7 @@
     "n_layers": 1, 
     "bidirectional":0, 
     "rnn_cell": "gru"
-  }
+  },
+  "crit": 0
+
 }

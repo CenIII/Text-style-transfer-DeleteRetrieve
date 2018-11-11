@@ -1,1 +1,1 @@
-from .seq2seq import Seq2seq
+from .seq2seq import Seq2seq, Criterion

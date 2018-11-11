@@ -1,7 +1,7 @@
 from loader import LoaderHandler
 # from evaluator import Evaluator
 from trainer import Trainer
-from model import Seq2seq#, Criterion
+from model import Seq2seq, Criterion
 from utils import ConfigParser, Tools
 
 def runTrain(config):
@@ -12,7 +12,7 @@ def runTrain(config):
 	print('net...')
 	net = Seq2seq(**config['model'])
 	print('crit...')
-	crit = None#Criterion(config['crit'])
+	crit = Criterion(config['crit'])
 	print('trainer...')
 	trainer = Trainer(config['trainer'],config['expPath'])
 	print('evaluator...')

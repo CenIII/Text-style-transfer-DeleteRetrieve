@@ -23,6 +23,11 @@ class YelpDataset(Dataset):
 		self.sos_id = self.wordDict['@@START@@']
 		self.eos_id = self.wordDict['@@END@@']
 
+	def isValidSentence(self,sentence):
+		if(sentence == [] or sentence == 'Positive' or sentence == 'Negative'):
+			return False
+		return True
+
 	def readData(self,datafile):
 		data = [] #{self.POS:[], self.NEG:[]}
 		# proc .0 file (negative)
@@ -30,7 +35,9 @@ class YelpDataset(Dataset):
 			with open(datafile+postfix,'r') as f:
 				line = f.readline()
 				while line:
-					data.append((style, line.split(' ')[:-1]))
+					sentence = line.split(' ')[:-1]
+					if self.isValidSentence(sentence):
+						data.append((style, sentence))
 					line = f.readline()
 		subread('.0',self.NEG)
 		subread('.1',self.POS)
@@ -43,8 +50,9 @@ class YelpDataset(Dataset):
 		return self.loadOne(idx)
 
 	def extractMarker(self, sentence, style):
-		maxc = 0
+		maxc = -float('inf')
 		words = sentence
+		cnt = 0
 		if style == self.POS:
 			style_count = self.pos_style_dict
 		elif style == self.NEG:
@@ -55,6 +63,9 @@ class YelpDataset(Dataset):
 				if style_count.get(tmp, 0) > maxc:
 					maxc = style_count.get(tmp, 0)
 					cur = (tmp, l ,l+n)
+					cnt += 1
+		if cnt==0:
+			print(sentence)
 		marker = cur[0].split(' ')
 		marker = self.applyNoise(marker, style_count)
 		return words[:cur[1]]+['<unk>']+words[cur[2]:], marker
@@ -99,7 +110,7 @@ class YelpDataset(Dataset):
 		resList = []
 		for sentence in sList:
 			indArr = []
-			indArr.append(self.sos_id)
+			# indArr.append(self.sos_id)
 			for i in range(len(sentence)):
 				word = sentence[i]
 				if word in self.wordDict:

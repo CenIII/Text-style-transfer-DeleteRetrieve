@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import torch
+import tqdm
 
 class Trainer(object):
 	"""docstring for Trainer"""
@@ -34,14 +35,15 @@ class Trainer(object):
 			print('Saving model...')
 		
 	def train(self, loader, net, crit, evaluator):
-		self.optimizer = None #torch.optim.Adam(net.parameters(), self.lr)
-		log = None
-		dispText = {'loss1':0,'loss2':1} #TODO: ...
+		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
 		# train
 		maxAcc = 0
 		while True:
 			ld = iter(loader.ldTrain)
-			for itr in range(len(ld)):
+			qdar = tqdm.tqdm(range(len(ld)),
+									total= len(ld),
+									ascii=True)
+			for itr in qdar: #range(len(ld)):
 				inputs = next(ld)
 				# print(">>>>>>>>inputs: "+str(inputs))
 				with torch.set_grad_enabled(True):
@@ -50,15 +52,17 @@ class Trainer(object):
 				self.optimizer.zero_grad()
 				loss.backward()
 				self.optimizer.step()
+				qdar.set_postfix(loss=str(np.round(loss.detach().numpy(),2)))
+
 			# save model
 			self.saveNet(net)
 			# loss on dev	
 			self.devLoss(loader.ldDev,net,crit)
 			# eval on dev
-			BLEU, Acc = evaluator.evaluate(loader.ldDevEval, net)
+			# BLEU, Acc = evaluator.evaluate(loader.ldDevEval, net)
 
-			# save best model
-			if Acc>maxAcc:
-				maxAcc = Acc
+			# # save best model
+			# if Acc>maxAcc:
+			# 	maxAcc = Acc
 
-				self.saveNet(net,isBest=True)
+			# 	self.saveNet(net,isBest=True)
