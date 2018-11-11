@@ -10,7 +10,7 @@ def runTrain(config):
 	if config['opt'].continue_exp:
 		net = Tools.reloadModel(config)
 	print('net...')
-	net = None#Seq2seq(config['model'])
+	net = Seq2seq(**config['model'])
 	print('crit...')
 	crit = None#Criterion(config['crit'])
 	print('trainer...')

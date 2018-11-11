@@ -1,12 +1,23 @@
 {
   "expPath": "./exp",
   "loader": {
-    "batchSize": 128,
-    "trainFile": "Data/yelp/sentiment.train",
-    "devFile": "Data/yelp/sentiment.dev",
-    "testFile": "Data/yelp/sentiment.test"
+    "batchSize": 3,
+    "wordDict": "../AuxData/wordDict",
+    "trainFile": "../Data/yelp/sentiment.train",
+    "devFile": "../Data/yelp/sentiment.dev",
+    "testFile": "../Data/yelp/sentiment.test"
   },
   "trainer":{
     "lr": 1e-4
+  },
+  "model":{
+    "embedding": "../AuxData/word2vec.npy", 
+    "wordDict": "../AuxData/wordDict",
+    "hidden_size": 500, 
+    "input_dropout_p": 0, 
+    "dropout_p": 0, 
+    "n_layers": 1, 
+    "bidirectional":0, 
+    "rnn_cell": "gru"
   }
 }

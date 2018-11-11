@@ -37,7 +37,11 @@ for dataset in ['yelp/']:
 				wordlist += line.split(' ')
 				line = f.readline()
 
+wordlist.append('<unk>')
+wordlist.append('@@START@@')
+wordlist.append('@@END@@')
 vocabs = set(wordlist)
+
 print(len(vocabs))
 
 wordDict = {}

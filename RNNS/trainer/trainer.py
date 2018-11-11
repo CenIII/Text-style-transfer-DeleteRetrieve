@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import torch
 
 class Trainer(object):
 	"""docstring for Trainer"""
@@ -41,9 +43,10 @@ class Trainer(object):
 			ld = iter(loader.ldTrain)
 			for itr in range(len(ld)):
 				inputs = next(ld)
+				print(">>>>>>>>inputs: "+str(inputs))
 				with torch.set_grad_enabled(True):
 					outputs = net(inputs)
-					loss = crit(outputs)
+					loss = crit(outputs,inputs)
 				self.optimizer.zero_grad()
 				loss.backward()
 				self.optimizer.step()
