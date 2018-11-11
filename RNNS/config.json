@@ -1,23 +1,12 @@
 {
   "expPath": "./exp",
-  
   "loader": {
     "batchSize": 128,
     "trainFile": "Data/yelp/sentiment.train",
     "devFile": "Data/yelp/sentiment.dev",
     "testFile": "Data/yelp/sentiment.test"
   },
-
   "trainer":{
     "lr": 1e-4
-  },
-
-  "evaluator":{
-
-  },
-
-  "model": {
-
-  },
-
+  }
 }

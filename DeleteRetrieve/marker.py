@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # In[ ]:
-
+import pickle
 
 def get_dict(sen_array):
         tmp_dict = {}
@@ -41,6 +41,7 @@ def getMarker(sentence, pos_style_dict, neg_style_dict, sentiment, gamma = 2):
         for l in range(0, len(words)-n+1):
             tmp = ' '.join(words[l:l+n])
             if style_count[tmp] > gamma and (all(i in res for i in subset(words[l:l+n])) or all(i not in res for i in subset(words[l:l+n])) or n == 1):
+                print('word:'+tmp+'score:'+str(style_count[tmp]))
                 res.append(words[l:l+n])
                 result.append(tmp)
                 for j in subset(words[l:l+n]):
@@ -52,15 +53,31 @@ def getMarker(sentence, pos_style_dict, neg_style_dict, sentiment, gamma = 2):
             break
     return result
 
-f = open("sentiment.train.1.txt")
+f = open("../Data/yelp/sentiment.train.1")
 dat = f.readlines()
-pos_dict = file_get_dict("sentiment.train.1.txt")
-neg_dict = file_get_dict("sentiment.train.0.txt")
+# pos_dict = file_get_dict("../Data/yelp/sentiment.train.1")
+# neg_dict = file_get_dict("../Data/yelp/sentiment.train.0")
+# with open('./pos_dict', "wb") as fp:   #Pickling
+#     pickle.dump(pos_dict, fp)
+# with open('./neg_dict', "wb") as fp:   #Pickling
+#     pickle.dump(neg_dict, fp)
+with open('./pos_dict', "rb") as fp:   #Pickling
+    pos_dict = pickle.load(fp)
+with open('./neg_dict', "rb") as fp:   #Pickling
+    neg_dict = pickle.load(fp)
 pos_style_count = {}
 neg_style_count = {}
 for i in pos_dict:
     pos_style_count[i] = (pos_dict[i]+1)/(neg_dict.get(i, 0)+1)
 for i in neg_dict:
     neg_style_count[i] = (neg_dict[i]+1)/(pos_dict.get(i, 0)+1)
-[[getMarker(data, pos_style_count, neg_style_count, "positive") for data in dat]]
+
+
+with open('./pos_style_count', "wb") as fp:   #Pickling
+    pickle.dump(pos_style_count, fp)
+with open('./neg_style_count', "wb") as fp:   #Pickling
+    pickle.dump(neg_style_count, fp)
+
+# [[getMarker(data, pos_style_count, neg_style_count, "positive") for data in dat]]
+
 

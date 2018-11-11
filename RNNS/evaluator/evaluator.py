@@ -1,4 +1,4 @@
-import Measure
+# import Measure
 
 
 class Evaluator(object):
@@ -9,12 +9,14 @@ class Evaluator(object):
 		self.classifier = Classifier()
 
 	def predictLine(self):
-
+		pass
 
 	def dumpOuts(self):
+		pass
 
 	def evaluate(self, loader, net):
-
+		pass
+		
 		# predict
 
 		# evaluate
