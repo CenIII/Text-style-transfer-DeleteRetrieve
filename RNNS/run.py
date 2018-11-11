@@ -5,19 +5,13 @@ from model import Seq2seq, Criterion
 from utils import ConfigParser, Tools
 
 def runTrain(config):
-	print('loader...')
 	loader = LoaderHandler(config['loader'])
 	if config['opt'].continue_exp:
 		net = Tools.reloadModel(config)
-	print('net...')
 	net = Seq2seq(**config['model'])
-	print('crit...')
 	crit = Criterion(config['crit'])
-	print('trainer...')
 	trainer = Trainer(config['trainer'],config['expPath'])
-	print('evaluator...')
 	evaluator = None#Evaluator(config['evaluator'],config['expPath'])
-	print('start to train...')
 	trainer.train(loader, net, crit, evaluator)
 
 def runVal():

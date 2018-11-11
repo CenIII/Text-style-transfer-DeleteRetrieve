@@ -5,6 +5,7 @@ class Evaluator(object):
 	"""docstring for Evaluator"""
 	def __init__(self):
 		super(Evaluator, self).__init__()
+		print('evaluator...')
 		self.bleu = BLEU()
 		self.classifier = Classifier()
 
@@ -16,7 +17,7 @@ class Evaluator(object):
 
 	def evaluate(self, loader, net):
 		pass
-		
+
 		# predict
 
 		# evaluate

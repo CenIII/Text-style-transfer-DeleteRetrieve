@@ -40,6 +40,7 @@ class Seq2seq(nn.Module):
 
 	def __init__(self, embedding=None, wordDict=None, hidden_size=300, input_dropout_p=0, max_len=100, dropout_p=0, n_layers=1, bidirectional=False, rnn_cell='gru', decode_function=F.log_softmax):
 		super(Seq2seq, self).__init__()
+		print('net...')
 		if embedding==None:
 			print('no embedding given. please try again')
 			exit(0)
@@ -83,6 +84,7 @@ class Criterion(nn.Module):
 	"""docstring for Criterion"""
 	def __init__(self, config):
 		super(Criterion, self).__init__()
+		print('crit...')
 
 	def LanguageModelLoss(self):
 		pass

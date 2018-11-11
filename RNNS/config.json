@@ -3,6 +3,8 @@
   "loader": {
     "batchSize": 32,
     "wordDict": "../AuxData/wordDict",
+    "posStyleDict": "../AuxData/pos_style_count",
+    "negStyleDict": "../AuxData/neg_style_count",
     "trainFile": "../Data/yelp/sentiment.train",
     "devFile": "../Data/yelp/sentiment.dev",
     "testFile": "../Data/yelp/sentiment.test"

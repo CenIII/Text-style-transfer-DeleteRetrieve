@@ -7,8 +7,9 @@ class Trainer(object):
 	"""docstring for Trainer"""
 	def __init__(self, config, savePath):
 		super(Trainer, self).__init__()
+		print('trainer...')
 		self.lr = config['lr']
-		self.savePath = savePath #os.path.join(config['exp_path'], config['opt'].exp)
+		self.savePath = savePath
 		os.makedirs(self.savePath, exist_ok=True)
 
 	def devLoss(self, ld, net, crit):
@@ -35,6 +36,7 @@ class Trainer(object):
 			print('Saving model...')
 		
 	def train(self, loader, net, crit, evaluator):
+		print('start to train...')
 		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
 		# train
 		maxAcc = 0

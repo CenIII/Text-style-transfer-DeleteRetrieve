@@ -10,21 +10,24 @@ class YelpDataset(Dataset):
 	POS = 1
 	NEG = -1
 	OppStyle = {POS:NEG,NEG:POS}
-	def __init__(self, datafile, wordDictFile): #, labeled=True, needLabel=True):
+	def __init__(self, config, datafile): #, wordDictFile): #, labeled=True, needLabel=True):
 		super(YelpDataset, self).__init__()
+		print('- dataset: '+datafile)
 		# self.data = {self.POS:[], self.NEG:[]}
 		self.data = self.readData(datafile)
-		with open('../AuxData/pos_style_count', "rb") as fp:   #Pickling
+		with open(config['posStyleDict'], "rb") as fp:   #Pickling
 			self.pos_style_dict =  pickle.load(fp)
-		with open('../AuxData/neg_style_count', "rb") as fp:   #Pickling
+		with open(config['negStyleDict'], "rb") as fp:   #Pickling
 			self.neg_style_dict = pickle.load(fp)
-		with open(wordDictFile,"rb") as fp:
+		with open(config['wordDict'],"rb") as fp:
 			self.wordDict = pickle.load(fp)
 		self.sos_id = self.wordDict['@@START@@']
 		self.eos_id = self.wordDict['@@END@@']
 
 	def isValidSentence(self,sentence):
-		if(sentence == [] or sentence == 'Positive' or sentence == 'Negative'):
+		if(sentence == [] or 
+			sentence == 'Positive' or 
+			sentence == 'Negative'):
 			return False
 		return True
 
@@ -106,7 +109,7 @@ class YelpDataset(Dataset):
 			# print(marker)
 		return marker
 
-	def word2index(self,sList):
+	def word2index(self, sList):
 		resList = []
 		for sentence in sList:
 			indArr = []
@@ -124,8 +127,6 @@ class YelpDataset(Dataset):
 		style, sentence = self.data[idx]
 		# print('style: '+str(style)+' sentence:'+str(sentence))
 		brkSentence, marker = self.extractMarker(sentence, style=style)
-		
-
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
 		brkSentence, marker, sentence = self.word2index([brkSentence, marker, sentence])
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
@@ -135,7 +136,10 @@ class YelpDataset(Dataset):
 class LoaderHandler(object):
 	"""docstring for LoaderHandler"""
 	def __init__(self, config):
-		super(LoaderHandler, self).__init__()	
-		self.ldTrain = DataLoader(YelpDataset(config['trainFile'],config['wordDict']),batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
-		self.ldDev = DataLoader(YelpDataset(config['devFile'],config['wordDict']),batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
-		self.ldDevEval = DataLoader(YelpDataset(config['devFile'],config['wordDict']),batch_size=1, shuffle=False)
+		super(LoaderHandler, self).__init__()
+		print('loader handler...')	
+		trainData = YelpDataset(config,config['trainFile'])
+		self.ldTrain = DataLoader(trainData,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
+		devData = YelpDataset(config,config['devFile'])
+		self.ldDev = DataLoader(devData,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
+		self.ldDevEval = DataLoader(devData,batch_size=1, shuffle=False)
