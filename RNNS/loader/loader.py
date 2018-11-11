@@ -56,6 +56,7 @@ class YelpDataset(Dataset):
 					maxc = style_count.get(tmp, 0)
 					cur = (tmp, l ,l+n)
 		marker = cur[0].split(' ')
+		marker = self.applyNoise(marker, style_count)
 		return words[:cur[1]]+['<unk>']+words[cur[2]:], marker
 		# maxc = 0
 		# words = sentence
@@ -77,10 +78,22 @@ class YelpDataset(Dataset):
 
 	# 	return targetMarker
 
-	def applyNoise(self, marker):
-		n_marker = []
-
-		return n_marker
+	def applyNoise(self, marker, style_count):
+		if len(marker) <= 1:
+			return marker
+		if np.random.uniform(0,1,1)<0.1:
+			# print(marker)
+			minScore = float('inf')
+			cur = None
+			# for loop marker
+			for i in range(len(marker)):
+				sc = style_count.get(marker[i], 0)
+				if  sc < minScore:
+					minScore = sc
+					cur = i
+			del marker[i]	
+			# print(marker)
+		return marker
 
 	def word2index(self,sList):
 		resList = []
@@ -100,8 +113,7 @@ class YelpDataset(Dataset):
 		style, sentence = self.data[idx]
 		# print('style: '+str(style)+' sentence:'+str(sentence))
 		brkSentence, marker = self.extractMarker(sentence, style=style)
-		print("brk: "+str(brkSentence))
-		print("marker: "+str(marker))
+		
 
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
 		brkSentence, marker, sentence = self.word2index([brkSentence, marker, sentence])

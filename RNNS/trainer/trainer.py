@@ -34,7 +34,7 @@ class Trainer(object):
 			print('Saving model...')
 		
 	def train(self, loader, net, crit, evaluator):
-		self.optimizer = torch.optim.Adam(net.parameters(), self.lr)
+		self.optimizer = None #torch.optim.Adam(net.parameters(), self.lr)
 		log = None
 		dispText = {'loss1':0,'loss2':1} #TODO: ...
 		# train
@@ -43,7 +43,7 @@ class Trainer(object):
 			ld = iter(loader.ldTrain)
 			for itr in range(len(ld)):
 				inputs = next(ld)
-				print(">>>>>>>>inputs: "+str(inputs))
+				# print(">>>>>>>>inputs: "+str(inputs))
 				with torch.set_grad_enabled(True):
 					outputs = net(inputs)
 					loss = crit(outputs,inputs)
