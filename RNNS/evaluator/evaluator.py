@@ -15,10 +15,12 @@ class Evaluator(object):
 	def dumpOuts(self):
 		pass
 
-	def evaluate(self, loader, net):
+	def predict(self, loader, net):
 		pass
 
-		# predict
+	def evaluateMetrics(self, preds):
+		pass
 
 		# evaluate
-
+	def evaluate(self, loader, net):
+		pass
