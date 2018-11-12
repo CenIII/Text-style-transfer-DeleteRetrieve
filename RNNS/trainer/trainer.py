@@ -47,7 +47,7 @@ class Trainer(object):
 		minLoss = float('inf')
 		while True:
 			ld = iter(loader.ldTrain)
-			numIters = 10#len(ld)
+			numIters = len(ld)
 			qdar = tqdm.tqdm(range(numIters),
 									total= numIters,
 									ascii=True)
