@@ -23,6 +23,7 @@ class YelpDataset(Dataset):
 			self.wordDict = pickle.load(fp)
 		self.sos_id = self.wordDict['@@START@@']
 		self.eos_id = self.wordDict['@@END@@']
+		self.isTrans = config['isTrans']
 
 	def isValidSentence(self,sentence):
 		if(sentence == [] or 
@@ -72,24 +73,11 @@ class YelpDataset(Dataset):
 		marker = cur[0].split(' ')
 		marker = self.applyNoise(marker, style_count)
 		return words[:cur[1]]+['<unk>']+words[cur[2]:], marker
-		# maxc = 0
-		# words = sentence
-		# if style == self.POS:
-		# 	style_count = self.pos_style_dict
-		# elif style == self.NEG:
-		# 	style_count = self.neg_style_dict
-		# for n in range(1, 5):
-		# 	for l in range(0, len(words)-n+1):
-		# 		tmp = words[l:l+n]
-		# 		if style_count.get(tmp, 0) > maxc:
-		# 			maxc = style_count.get(tmp, 0)
-		# 			cur = (tmp, l ,l+n)
-		# return words[:cur[1]] + ["<unk>"] + words[cur[2]:], cur[0]
 
-	# def retrieveTargetMarker(self, brkSentence, targetStyle=self.NEG):
-	# 	# an API wrapper
-	# 	# whether we need deleted marker for this task or not is debatable
-
+	def retrieveTargetMarker(self, brkSentence, targetStyle):
+		# an API wrapper
+		# whether we need deleted marker for this task or not is debatable
+		pass
 	# 	return targetMarker
 
 	def applyNoise(self, marker, style_count):
@@ -127,6 +115,8 @@ class YelpDataset(Dataset):
 		style, sentence = self.data[idx]
 		# print('style: '+str(style)+' sentence:'+str(sentence))
 		brkSentence, marker = self.extractMarker(sentence, style=style)
+		if self.isTrans:
+			marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
 		brkSentence, marker, sentence = self.word2index([brkSentence, marker, sentence])
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])

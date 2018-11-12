@@ -6,9 +6,9 @@ from utils import ConfigParser, utils
 
 def runTrain(config):
 	loader = LoaderHandler(config['loader'])
-	if config['opt'].continue_exp:
-		net = utils.reloadModel(config)
 	net = Seq2seq(**config['model'])
+	if config['opt'].continue_exp:
+		net = utils.reloadModel(net, config)
 	crit = Criterion(config['crit'])
 	trainer = Trainer(config['trainer'],config['expPath'])
 	evaluator = None#Evaluator(config['evaluator'],config['expPath'])
@@ -16,7 +16,8 @@ def runTrain(config):
 
 def runVal():
 	loader = LoaderHandler(config['loader'])
-	net = utils.reloadModel(config)
+	net = Seq2seq(**config['model'])
+	net = utils.reloadModel(net,config)
 	evaluator = Evaluator(config['evaluator'],config['expPath'])
 
 def main():
