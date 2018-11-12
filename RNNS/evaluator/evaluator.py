@@ -1,18 +1,31 @@
 # import Measure
-
+import os
+import pickle
+import torch
+import tqdm
 
 class Evaluator(object):
 	"""docstring for Evaluator"""
-	def __init__(self):
+	def __init__(self,config,expPath):
 		super(Evaluator, self).__init__()
 		print('evaluator...')
-		self.bleu = BLEU()
-		self.classifier = Classifier()
-		self.ind2wordDict = None
+		with open(config['wordDict'],"rb") as fp:
+			self.wordDict = pickle.load(fp)
+		self.ind2wordDict = self._buildInd2Word(self.wordDict)
+		self.savePath = expPath
+		os.makedirs(self.savePath, exist_ok=True)
+
+	def _buildInd2Word(self,wordDict):
+		vocabs = list(self.wordDict.keys())
+		for i in range(len(vocabs)):
+			assert(self.wordDict[vocabs[i]]==i)
+		return vocabs
 
 	def ind2word(self,sequence):
-
-		pass
+		if not isinstance(sequence,torch.Tensor) or (sequence.dim()>0):
+			return [self.ind2word(sequence[i]) for i in range(len(sequence))]
+		else:
+			return self.ind2wordDict[sequence]
 
 	def predictLine(self, ld, net, line):
 		# get marker
@@ -27,17 +40,29 @@ class Evaluator(object):
 
 		pass
 
-	def dumpOuts(self):
+	def dumpOuts(self, predList):
 		# each pred take 3 lines
 		# pred #
 		# sentence: ...
 		# brkSentence, marker: ...
 		# pred: ...
-
-		pass
+		with open(os.path.join(self.savePath,'preds.outs'),'w') as f:
+			cnt = 0
+			for ent in predList:
+				f.write('# '+str(cnt)+'\n')
+				sent = 'sentence:'+' '.join(ent[0][0])+'\n'
+				f.write(sent)
+				brk = 'brk_sentence:'+' '.join(ent[1][0])+'\n'
+				f.write(brk)
+				mk = 'marker:'+' '.join(ent[2][0])+'\n'
+				f.write(mk)
+				pred = [ent[3][i][0][0] for i in range(len(ent[3]))]
+				pred = 'pred: '+' '.join(pred)+'\n'
+				f.write(pred)
+				cnt += 1
 
 	def predict(self, ld, net):
-		ld = iter(ld)
+		ld = iter(ld.ldDevEval)
 		predList = [] #([brkSent],[marker],[pred])
 		with torch.set_grad_enabled(False):
 			numIters = len(ld)
@@ -53,7 +78,7 @@ class Evaluator(object):
 				sentence = inputs['sentence']
 				pred = outputs[2]['sequence']
 
-				predList.append((sentence,brkSent,marker,pred))
+				predList.append([sentence,brkSent,marker,pred])
 		predList_w = self.ind2word(predList)
 		self.dumpOuts(predList_w)
 		return predList
@@ -62,7 +87,7 @@ class Evaluator(object):
 		pass
 
 		# evaluate
-	def evaluate(self, ld, net):
-		predList = self.predict(ld, net)
-		BLEU, Acc = self.evaluateMetrics(predList)
-		return BLEU, Acc
+	# def evaluate(self, ld, net):
+	# 	predList = self.predict(ld, net)
+	# 	BLEU, Acc = self.evaluateMetrics(predList)
+	# 	return BLEU, Acc

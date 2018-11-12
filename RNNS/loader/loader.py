@@ -132,4 +132,4 @@ class LoaderHandler(object):
 		self.ldTrain = DataLoader(trainData,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
 		devData = YelpDataset(config,config['devFile'])
 		self.ldDev = DataLoader(devData,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
-		self.ldDevEval = DataLoader(devData,batch_size=1, shuffle=False)
+		self.ldDevEval = DataLoader(devData,batch_size=1, shuffle=False, collate_fn=seq_collate)

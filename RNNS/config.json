@@ -23,6 +23,8 @@
     "bidirectional":0, 
     "rnn_cell": "gru"
   },
-  "crit": 0
-
+  "crit": 0,
+  "evaluator":{
+    "wordDict": "../AuxData/wordDict"
+  }
 }
