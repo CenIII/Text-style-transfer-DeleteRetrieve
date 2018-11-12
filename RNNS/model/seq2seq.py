@@ -56,7 +56,7 @@ class Seq2seq(nn.Module):
 		self.encoder1 = EncoderRNN(vocab_size, max_len, hidden_size,
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
 				embedding=embedding, update_embedding=False)
-		self.decoder = DecoderRNN(vocab_size, max_len, hidden_size, sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
+		self.decoder = DecoderRNN(vocab_size, max_len, int(2*hidden_size), sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=True)
 		self.decode_function = decode_function
 
@@ -68,10 +68,10 @@ class Seq2seq(nn.Module):
 				teacher_forcing_ratio=0):
 		encoder_outputs0, encoder_hidden0 = self.encoder0(inputs['brk_sentence'], inputs['bs_inp_lengths'])
 		encoder_outputs1, encoder_hidden1 = self.encoder1(inputs['marker'], inputs['mk_inp_lengths'])
-		encoder_outputs = torch.cat((encoder_outputs0,encoder_outputs1),1)
-		# encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),0)
+		encoder_outputs = torch.cat((encoder_outputs0,encoder_outputs1),1).repeat(1,1,2)
+		encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),2)
 		result = self.decoder(inputs=target_variable,
-							  encoder_hidden=encoder_hidden0,
+							  encoder_hidden=encoder_hidden,
 							  encoder_outputs=encoder_outputs,
 							  function=self.decode_function,
 							  teacher_forcing_ratio=teacher_forcing_ratio,

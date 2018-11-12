@@ -2,12 +2,12 @@ from loader import LoaderHandler
 # from evaluator import Evaluator
 from trainer import Trainer
 from model import Seq2seq, Criterion
-from utils import ConfigParser, Tools
+from utils import ConfigParser, utils
 
 def runTrain(config):
 	loader = LoaderHandler(config['loader'])
 	if config['opt'].continue_exp:
-		net = Tools.reloadModel(config)
+		net = utils.reloadModel(config)
 	net = Seq2seq(**config['model'])
 	crit = Criterion(config['crit'])
 	trainer = Trainer(config['trainer'],config['expPath'])
@@ -16,7 +16,7 @@ def runTrain(config):
 
 def runVal():
 	loader = LoaderHandler(config['loader'])
-	net = Tools.reloadModel(config)
+	net = utils.reloadModel(config)
 	evaluator = Evaluator(config['evaluator'],config['expPath'])
 
 def main():

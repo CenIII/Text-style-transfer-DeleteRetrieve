@@ -74,7 +74,7 @@ class DecoderRNN(BaseRNN):
                 n_layers, rnn_cell)
 
         self.bidirectional_encoder = bidirectional
-        self.rnn = self.rnn_cell(hidden_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
+        self.rnn = self.rnn_cell(300, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
 
         self.output_size = vocab_size
         self.max_length = max_len
@@ -84,7 +84,7 @@ class DecoderRNN(BaseRNN):
 
         self.init_input = None
 
-        self.embedding = nn.Embedding(self.output_size, self.hidden_size)
+        self.embedding = nn.Embedding(self.output_size, 300)
         if use_attention:
             self.attention = Attention(self.hidden_size)
 

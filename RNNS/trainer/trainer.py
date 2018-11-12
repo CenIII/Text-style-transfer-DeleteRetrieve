@@ -16,11 +16,16 @@ class Trainer(object):
 		ld = iter(ld)
 		devLoss = np.zeros(len(ld))
 		with torch.set_grad_enabled(False):
-			for itr in range(len(ld)):
+			numIters = len(ld)
+			qdar = tqdm.tqdm(range(numIters),
+									total= numIters,
+									ascii=True)
+			for itr in qdar:
 				inputs = next(ld)
 				outputs = net(inputs)
-				loss = crit(outputs)
+				loss = crit(outputs,inputs)
 				devLoss[itr] = loss
+				qdar.set_postfix(loss=str(np.round(loss.detach().numpy(),2)))
 		devLoss = devLoss.mean()
 		print('Average loss on dev set: '+str(devLoss))
 		return devLoss
@@ -29,7 +34,7 @@ class Trainer(object):
 		fileName = 'bestmodel.pth.tar' if isBest else 'checkpoint.pth.tar' 
 		filePath = os.path.join(self.savePath, fileName)
 		os.makedirs(self.savePath, exist_ok=True)
-		torch.save({'state_dict': net.state_dict()})
+		torch.save({'state_dict': net.state_dict()},filePath)
 		if isBest:
 			print('>>> Saving best model...')
 		else:
@@ -39,11 +44,12 @@ class Trainer(object):
 		print('start to train...')
 		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
 		# train
-		maxAcc = 0
+		minLoss = float('inf')
 		while True:
 			ld = iter(loader.ldTrain)
-			qdar = tqdm.tqdm(range(len(ld)),
-									total= len(ld),
+			numIters = 10#len(ld)
+			qdar = tqdm.tqdm(range(numIters),
+									total= numIters,
 									ascii=True)
 			for itr in qdar: #range(len(ld)):
 				inputs = next(ld)
@@ -59,12 +65,11 @@ class Trainer(object):
 			# save model
 			self.saveNet(net)
 			# loss on dev	
-			self.devLoss(loader.ldDev,net,crit)
+			devLoss = self.devLoss(loader.ldDev,net,crit)
 			# eval on dev
 			# BLEU, Acc = evaluator.evaluate(loader.ldDevEval, net)
 
-			# # save best model
-			# if Acc>maxAcc:
-			# 	maxAcc = Acc
-
-			# 	self.saveNet(net,isBest=True)
+			# save best model
+			if devLoss < minLoss:
+				minLoss = devLoss
+				self.saveNet(net,isBest=True)

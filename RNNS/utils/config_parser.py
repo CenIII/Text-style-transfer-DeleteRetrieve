@@ -24,10 +24,10 @@ class ConfigParser:
 	def _parse_config_file(opt):
 		with open('./config.json', 'r') as f:
 			config = json.load(f)
+		config['expPath'] = os.path.join(config['expPath'], opt.exp)
 		print('config: ')
 		print(json.dumps(config, indent = 4))
 		config['opt'] = opt
-		config['expPath'] = os.path.join(config['expPath'], opt.exp)
 		return config
 
 	def parse_config():

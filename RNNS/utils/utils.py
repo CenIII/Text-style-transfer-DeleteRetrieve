@@ -35,3 +35,8 @@ def seq_collate(batch):
 			'mk_inp_lengths':mkLengths,
 			'sentence':sent,
 			'st_inp_lengths':stLengths }
+
+
+def reloadModel(config):
+	net = None
+	return net
