@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import os
 
 def subset(array):
     result = []
@@ -44,7 +45,7 @@ def reloadModel(model,config):
 	model_dict = model.state_dict()
 	# 1. filter out unnecessary keys
 	pretrained_dict = {}
-	for k, v in self.checkpoint['state_dict'].items():
+	for k, v in checkpoint['state_dict'].items():
 		if(k in model_dict):
 			pretrained_dict[k] = v
 	# 2. overwrite entries in the existing state dict
