@@ -16,9 +16,8 @@ class Evaluator(object):
 		os.makedirs(self.savePath, exist_ok=True)
 
 	def _buildInd2Word(self,wordDict):
-		vocabs = list(self.wordDict.keys())
-		for i in range(len(vocabs)):
-			assert(self.wordDict[vocabs[i]]==i)
+		vocabs = sorted(self.wordDict.items(), key=lambda x: x[1])
+		vocabs = [vocabs[i][0] for i in range(len(vocabs))]
 		return vocabs
 
 	def ind2word(self,sequence):
