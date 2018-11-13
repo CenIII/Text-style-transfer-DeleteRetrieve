@@ -38,11 +38,13 @@ class YelpDataset(Dataset):
 		def subread(postfix,style):
 			with open(datafile+postfix,'r') as f:
 				line = f.readline()
-				while line:
+				i = 0
+				while line and i<100:
 					sentence = line.split(' ')[:-1]
 					if self.isValidSentence(sentence):
 						data.append((style, sentence))
 					line = f.readline()
+					i += 1
 		subread('.0',self.NEG)
 		subread('.1',self.POS)
 		return data
