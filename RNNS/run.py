@@ -4,6 +4,26 @@ from trainer import Trainer
 from model import Seq2seq, Criterion
 from utils import ConfigParser, utils
 
+#todo: 
+# 1. add word ind trans tools as a class to utils? can be used by evaluator and loader.
+# 2. make delete and retrieve a class? encapsulate into loader. 
+
+# reorganize the code to 
+# folder:
+	# AuxDATA
+	# Data
+	# Model
+	# Tools
+		# trainer
+		# loader
+		# delete&retrieve
+		# evaluator
+		# metrics
+		# utils
+			# wordindvec
+	# config
+	# run.py
+
 def runTrain(config):
 	loader = LoaderHandler(config['loader'])
 	net = Seq2seq(**config['model'])
