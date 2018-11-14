@@ -41,6 +41,8 @@ def runTrain(config):
 def runVal(config):
 	loader = LoaderHandler(config['loader'])
 	net = Seq2seq(**config['model'])
+	if torch.cuda.is_available():
+		net = net.cuda()
 	net = utils.reloadModel(net,config)
 	evaluator = Evaluator(config['evaluator'],config['expPath'])
 	evaluator.predict(loader,net)

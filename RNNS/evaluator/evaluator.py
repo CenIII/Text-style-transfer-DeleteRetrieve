@@ -3,6 +3,7 @@ import os
 import pickle
 import torch
 import tqdm
+from utils import makeInp
 
 class Evaluator(object):
 	"""docstring for Evaluator"""
@@ -69,7 +70,7 @@ class Evaluator(object):
 									total= numIters,
 									ascii=True)
 			for itr in qdar:
-				inputs = next(ld)
+				inputs = makeInp(next(ld))
 				outputs = net(inputs)
 
 				brkSent = inputs['brk_sentence']

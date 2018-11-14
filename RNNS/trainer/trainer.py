@@ -57,7 +57,7 @@ class Trainer(object):
 		epoch = 0.
 		while True:
 			net.train()
-			self.adjust_learning_rate(self.optimizer, epoch)
+			# self.adjust_learning_rate(self.optimizer, epoch)
 			ld = iter(loader.ldTrain)
 			numIters = len(ld)
 			qdar = tqdm.tqdm(range(numIters),
@@ -66,7 +66,7 @@ class Trainer(object):
 			for itr in qdar: #range(len(ld)):
 				inputs = makeInp(next(ld))
 				with torch.set_grad_enabled(True):
-					outputs = net(inputs, teacher_forcing_ratio=max((1-epoch/50),0))
+					outputs = net(inputs, teacher_forcing_ratio=max((0.2-epoch/2),0))
 					loss = crit(outputs,inputs)
 				self.optimizer.zero_grad()
 				loss.backward()
