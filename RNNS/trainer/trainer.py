@@ -66,7 +66,7 @@ class Trainer(object):
 			for itr in qdar: #range(len(ld)):
 				inputs = makeInp(next(ld))
 				with torch.set_grad_enabled(True):
-					outputs = net(inputs, teacher_forcing_ratio=(1-epoch/50))
+					outputs = net(inputs, teacher_forcing_ratio=max((1-epoch/50),0))
 					loss = crit(outputs,inputs)
 				self.optimizer.zero_grad()
 				loss.backward()
