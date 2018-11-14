@@ -124,9 +124,9 @@ class YelpDataset(Dataset):
 		brkSentence, marker = self.word2index([brkSentence, marker])
 		sentence = self.word2index([sentence],sos=True)[0]
 		if torch.cuda.is_available():
-			sentence.cuda()
-			brkSentence.cuda()
-			marker.cuda()
+			torch.LongTensor(sentence).cuda()
+			torch.LongTensor(brkSentence).cuda()
+			torch.LongTensor(marker).cuda()
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
 		return (brkSentence, marker, sentence) #targetMarker
 
