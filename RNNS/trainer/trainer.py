@@ -2,7 +2,6 @@ import numpy as np
 import os
 import torch
 import tqdm
-from utils import makeInp
 
 class Trainer(object):
 	"""docstring for Trainer"""
@@ -23,7 +22,7 @@ class Trainer(object):
 									total= numIters,
 									ascii=True)
 			for itr in qdar:
-				inputs = makeInp(next(ld))
+				inputs = next(ld)
 				outputs = net(inputs)
 				loss = crit(outputs,inputs)
 				devLoss[itr] = loss
@@ -56,7 +55,7 @@ class Trainer(object):
 									total= numIters,
 									ascii=True)
 			for itr in qdar: #range(len(ld)):
-				inputs = makeInp(next(ld))
+				inputs = next(ld)
 				with torch.set_grad_enabled(True):
 					outputs = net(inputs)
 					loss = crit(outputs,inputs)
