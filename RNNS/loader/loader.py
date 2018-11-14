@@ -38,13 +38,13 @@ class YelpDataset(Dataset):
 		def subread(postfix,style):
 			with open(datafile+postfix,'r') as f:
 				line = f.readline()
-				i = 0
-				while line and i<100:
+				# i = 0
+				while line:
 					sentence = line.split(' ')[:-1]
 					if self.isValidSentence(sentence):
 						data.append((style, sentence))
 					line = f.readline()
-					i += 1
+					# i += 1
 		subread('.0',self.NEG)
 		subread('.1',self.POS)
 		return data
@@ -99,16 +99,17 @@ class YelpDataset(Dataset):
 			# print(marker)
 		return marker
 
-	def word2index(self, sList):
+	def word2index(self, sList, sos=False):
 		resList = []
 		for sentence in sList:
 			indArr = []
-			# indArr.append(self.sos_id)
+			if sos:
+				indArr.append(self.sos_id)
 			for i in range(len(sentence)):
 				word = sentence[i]
 				if word in self.wordDict:
 					indArr.append(self.wordDict[word])
-			indArr.append(self.eos_id)
+			# indArr.append(self.eos_id) 
 			indArr = np.array(indArr)
 			resList.append(indArr)
 		return resList
@@ -120,7 +121,8 @@ class YelpDataset(Dataset):
 		if self.isTrans:
 			marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
-		brkSentence, marker, sentence = self.word2index([brkSentence, marker, sentence])
+		brkSentence, marker = self.word2index([brkSentence, marker])
+		sentence = self.word2index([sentence],sos=True)[0]
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
 		return (brkSentence, marker, sentence) #targetMarker
 

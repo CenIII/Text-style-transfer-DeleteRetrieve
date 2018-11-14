@@ -56,9 +56,11 @@ class Seq2seq(nn.Module):
 		self.encoder1 = EncoderRNN(vocab_size, max_len, hidden_size,
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
 				embedding=embedding, update_embedding=False)
-		self.decoder = DecoderRNN(vocab_size, max_len, int(2*hidden_size), sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
-				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=True)
+		self.decoder = DecoderRNN(vocab_size, max_len, int(hidden_size), sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
+				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=False)
 		self.decode_function = decode_function
+		if torch.cuda.is_available():
+			self.cuda()
 
 	def flatten_parameters(self):
 		self.encoder.rnn.flatten_parameters()
@@ -66,12 +68,15 @@ class Seq2seq(nn.Module):
 
 	def forward(self, inputs, target_variable=None,
 				teacher_forcing_ratio=0):
+		if self.training:
+			teacher_forcing_ratio=0.5
 		encoder_outputs0, encoder_hidden0 = self.encoder0(inputs['brk_sentence'], inputs['bs_inp_lengths'])
 		encoder_outputs1, encoder_hidden1 = self.encoder1(inputs['marker'], inputs['mk_inp_lengths'])
-		encoder_outputs = torch.cat((encoder_outputs0,encoder_outputs1),1).repeat(1,1,2)
-		encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),2)
-		result = self.decoder(inputs=target_variable,
-							  encoder_hidden=encoder_hidden,
+		encoder_outputs = torch.cat((encoder_outputs0,encoder_outputs1),1)
+		encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),2).repeat(int(max(inputs['st_inp_lengths'])),1,1).transpose(0,1)
+		result = self.decoder(inputs=encoder_hidden, #inputs['sentence'],#target_variable,
+							  target_inps=inputs['sentence'],
+							  encoder_hidden=None, #encoder_hidden0,
 							  encoder_outputs=encoder_outputs,
 							  function=self.decode_function,
 							  teacher_forcing_ratio=teacher_forcing_ratio,
@@ -85,6 +90,9 @@ class Criterion(nn.Module):
 	def __init__(self, config):
 		super(Criterion, self).__init__()
 		print('crit...')
+		self.celoss = nn.CrossEntropyLoss()
+		if torch.cuda.is_available():
+			self.cuda()
 
 	def LanguageModelLoss(self):
 		pass
@@ -101,9 +109,10 @@ class Criterion(nn.Module):
 		batchSize = len(labels)
 		loss = 0
 		for i in range(batchSize):
-			wordLogPs = decoder_outputs[i][:lengths[i]]
-			gtWdIndices = labels[i][:lengths[i]]
-			loss += - torch.sum(torch.gather(wordLogPs,1,gtWdIndices.unsqueeze(1))) # [wordLogPs[:,index] for index in gtWdIndices])
+			wordLogPs = decoder_outputs[i][:lengths[i]-1]
+			gtWdIndices = labels[i][1:lengths[i]]
+			loss += self.celoss(wordLogPs, gtWdIndices)
+			# loss += - torch.sum(torch.gather(wordLogPs,1,gtWdIndices.unsqueeze(1)))/float(lengths[i]-1)
 		loss = loss/batchSize
 		return loss
 			

@@ -74,7 +74,7 @@ class DecoderRNN(BaseRNN):
                 n_layers, rnn_cell)
 
         self.bidirectional_encoder = bidirectional
-        self.rnn = self.rnn_cell(300, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
+        self.rnn = self.rnn_cell(1324, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
 
         self.output_size = vocab_size
         self.max_length = max_len
@@ -93,19 +93,19 @@ class DecoderRNN(BaseRNN):
     def forward_step(self, input_var, hidden, encoder_outputs, function):
         batch_size = input_var.size(0)
         output_size = input_var.size(1)
-        embedded = self.embedding(input_var)
-        embedded = self.input_dropout(embedded)
-
+        # embedded = self.embedding(input_var)
+        embedded = self.input_dropout(input_var)#embedded)
         output, hidden = self.rnn(embedded, hidden)
 
         attn = None
         if self.use_attention:
             output, attn = self.attention(output, encoder_outputs)
 
-        predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
+        # predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
+        predicted_softmax = self.out(output.contiguous().view(-1, self.hidden_size)).view(batch_size, output_size, -1)
         return predicted_softmax, hidden, attn
 
-    def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None,
+    def forward(self, inputs=None, target_inps=None, encoder_hidden=None, encoder_outputs=None,
                     function=F.log_softmax, teacher_forcing_ratio=0, outputs_maxlen=None):
         if outputs_maxlen:
             self.max_length = outputs_maxlen
@@ -140,7 +140,8 @@ class DecoderRNN(BaseRNN):
         # Manual unrolling is used to support random teacher forcing.
         # If teacher_forcing_ratio is True or False instead of a probability, the unrolling can be done in graph
         if use_teacher_forcing:
-            decoder_input = inputs[:, :-1]
+            target_inps = self.embedding(target_inps[:,:-1])
+            decoder_input = torch.cat((target_inps, inputs[:, :-1]),2)
             decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                      function=function)
 
@@ -153,12 +154,13 @@ class DecoderRNN(BaseRNN):
                 decode(di, step_output, step_attn)
         else:
             decoder_input = inputs[:, 0].unsqueeze(1)
+            decoder_input = torch.cat((self.embedding(torch.LongTensor([self.sos_id])).unsqueeze(0).repeat(batch_size,1,1),decoder_input), 2)
             for di in range(max_length):
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                          function=function)
                 step_output = decoder_output.squeeze(1)
                 symbols = decode(di, step_output, step_attn)
-                decoder_input = symbols
+                decoder_input = torch.cat((self.embedding(symbols),inputs[:,di].unsqueeze(1)), 2)#symbols
 
         ret_dict[DecoderRNN.KEY_SEQUENCE] = sequence_symbols
         ret_dict[DecoderRNN.KEY_LENGTH] = lengths.tolist()

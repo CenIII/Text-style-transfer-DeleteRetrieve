@@ -2,6 +2,7 @@ import numpy as np
 import os
 import torch
 import tqdm
+from utils import makeInp
 
 class Trainer(object):
 	"""docstring for Trainer"""
@@ -13,6 +14,7 @@ class Trainer(object):
 		os.makedirs(self.savePath, exist_ok=True)
 
 	def devLoss(self, ld, net, crit):
+		net.eval()
 		ld = iter(ld)
 		devLoss = np.zeros(len(ld))
 		with torch.set_grad_enabled(False):
@@ -21,7 +23,7 @@ class Trainer(object):
 									total= numIters,
 									ascii=True)
 			for itr in qdar:
-				inputs = next(ld)
+				inputs = makeInp(next(ld))
 				outputs = net(inputs)
 				loss = crit(outputs,inputs)
 				devLoss[itr] = loss
@@ -42,18 +44,19 @@ class Trainer(object):
 		
 	def train(self, loader, net, crit, evaluator):
 		print('start to train...')
+		
 		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
 		# train
 		minLoss = float('inf')
 		while True:
+			net.train()
 			ld = iter(loader.ldTrain)
 			numIters = len(ld)
 			qdar = tqdm.tqdm(range(numIters),
 									total= numIters,
 									ascii=True)
 			for itr in qdar: #range(len(ld)):
-				inputs = next(ld)
-				# print(">>>>>>>>inputs: "+str(inputs))
+				inputs = makeInp(next(ld))
 				with torch.set_grad_enabled(True):
 					outputs = net(inputs)
 					loss = crit(outputs,inputs)

@@ -54,3 +54,7 @@ def reloadModel(model,config):
 	model.load_state_dict(model_dict)
 	return model
 
+def makeInp(inputs):
+	if torch.cuda.is_available():
+		inputs.cuda()
+	return inputs
