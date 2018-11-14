@@ -56,6 +56,6 @@ def reloadModel(model,config):
 
 def makeInp(inputs):
 	if torch.cuda.is_available():
-		for ent in inputs:
-			ent.cuda()
+		for key in inputs:
+			inputs[key].cuda()
 	return inputs
