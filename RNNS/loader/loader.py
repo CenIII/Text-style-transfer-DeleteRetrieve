@@ -123,7 +123,7 @@ class YelpDataset(Dataset):
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
 		brkSentence, marker = self.word2index([brkSentence, marker])
 		sentence = self.word2index([sentence],sos=True)[0]
-		if torch.cuda.available():
+		if torch.cuda.is_available():
 			sentence.cuda()
 			brkSentence.cuda()
 			marker.cuda()
