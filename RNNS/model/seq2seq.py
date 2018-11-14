@@ -57,7 +57,7 @@ class Seq2seq(nn.Module):
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
 				embedding=embedding, update_embedding=False)
 		self.decoder = DecoderRNN(vocab_size, max_len, int(hidden_size), sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
-				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=False)
+				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=False, embedding=embedding, update_embedding=False)
 		self.decode_function = decode_function
 
 	def flatten_parameters(self):
