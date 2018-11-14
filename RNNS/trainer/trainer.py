@@ -27,7 +27,7 @@ class Trainer(object):
 				outputs = net(inputs)
 				loss = crit(outputs,inputs)
 				devLoss[itr] = loss
-				qdar.set_postfix(loss=str(np.round(loss.detach().numpy(),2)))
+				qdar.set_postfix(loss=str(np.round(loss.cpu().detach().numpy(),3)))
 		devLoss = devLoss.mean()
 		print('Average loss on dev set: '+str(devLoss))
 		return devLoss
