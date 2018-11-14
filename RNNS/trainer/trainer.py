@@ -63,7 +63,7 @@ class Trainer(object):
 				self.optimizer.zero_grad()
 				loss.backward()
 				self.optimizer.step()
-				qdar.set_postfix(loss=str(np.round(loss.cpu().detach().numpy(),2)))
+				qdar.set_postfix(loss=str(np.round(loss.cpu().detach().numpy(),3)))
 
 			# save model
 			self.saveNet(net)

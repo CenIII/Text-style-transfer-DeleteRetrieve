@@ -155,10 +155,10 @@ class DecoderRNN(BaseRNN):
         else:
             decoder_input = inputs[:, 0].unsqueeze(1)
             # cat sos to input(i.e. concatenated hiddens)
-            sos_ts = torch.LongTensor([self.sos_id])
+            sos_ts = torch.LongTensor([[self.sos_id]]).repeat(batch_size,1)
             if torch.cuda.is_available():
                 sos_ts = sos_ts.cuda()
-            decoder_input = torch.cat((self.embedding(sos_ts).unsqueeze(0).repeat(batch_size,1,1),decoder_input), 2)
+            decoder_input = torch.cat((self.embedding(sos_ts),decoder_input), 2)
             for di in range(max_length):
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                          function=function)
