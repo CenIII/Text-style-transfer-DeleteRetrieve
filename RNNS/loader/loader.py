@@ -123,10 +123,6 @@ class YelpDataset(Dataset):
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
 		brkSentence, marker = self.word2index([brkSentence, marker])
 		sentence = self.word2index([sentence],sos=True)[0]
-		if torch.cuda.is_available():
-			sentence = torch.autograd.Variable(sentence,requires_grad=False).cuda()
-			brkSentence = torch.autograd.Variable(brkSentence,requires_grad=False).cuda()
-			marker = torch.autograd.Variable(marker,requires_grad=False).cuda()
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
 		return (brkSentence, marker, sentence) #targetMarker
 
