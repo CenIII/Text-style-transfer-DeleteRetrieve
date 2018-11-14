@@ -30,6 +30,9 @@ def runTrain(config):
 	if config['opt'].continue_exp:
 		net = utils.reloadModel(net, config)
 	crit = Criterion(config['crit'])
+	if torch.cuda.is_available():
+		net = net.cuda()
+		crit = crit.cuda()
 	trainer = Trainer(config['trainer'],config['expPath'])
 	evaluator = Evaluator(config['evaluator'],config['expPath'])
 	trainer.train(loader, net, crit, evaluator)

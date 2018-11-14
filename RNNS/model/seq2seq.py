@@ -59,8 +59,6 @@ class Seq2seq(nn.Module):
 		self.decoder = DecoderRNN(vocab_size, max_len, int(hidden_size), sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=False)
 		self.decode_function = decode_function
-		if torch.cuda.is_available():
-			self.cuda()
 
 	def flatten_parameters(self):
 		self.encoder.rnn.flatten_parameters()
@@ -91,8 +89,6 @@ class Criterion(nn.Module):
 		super(Criterion, self).__init__()
 		print('crit...')
 		self.celoss = nn.CrossEntropyLoss()
-		if torch.cuda.is_available():
-			self.cuda()
 
 	def LanguageModelLoss(self):
 		pass
