@@ -48,13 +48,13 @@ class Trainer(object):
 		else:
 			print('Saving model...')
 		
-	def train(self, loader, net, crit, evaluator):
+	def train(self, loader, net, crit, evaluator, config):
 		print('start to train...')
 		
 		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
 		# train
 		minLoss = float('inf')
-		epoch = 0.
+		epoch = config['opt'].epoch
 		while True:
 			net.train()
 			self.adjust_learning_rate(self.optimizer, epoch)

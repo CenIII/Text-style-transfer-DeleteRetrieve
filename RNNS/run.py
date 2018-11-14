@@ -36,7 +36,7 @@ def runTrain(config):
 		crit = crit.cuda()
 	trainer = Trainer(config['trainer'],config['expPath'])
 	evaluator = Evaluator(config['evaluator'],config['expPath'])
-	trainer.train(loader, net, crit, evaluator)
+	trainer.train(loader, net, crit, evaluator, config)
 
 def runVal(config):
 	loader = LoaderHandler(config['loader'])

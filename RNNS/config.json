@@ -1,7 +1,7 @@
 {
   "expPath": "./exp",
   "loader": {
-    "batchSize": 64,
+    "batchSize": 256,
     "isTrans": 0,
     "wordDict": "../AuxData/wordDict",
     "posStyleDict": "../AuxData/pos_style_count",

@@ -11,6 +11,7 @@ class ConfigParser:
 		parser.add_argument('-e', '--exp', type=str, default='pose', help='experiments name: [anystring]')
 		# parser.add_argument('-v', '--evaluate', action='store_true', help='load predicted results')
 		parser.add_argument('-f', '--resume_file', type=str, default='checkpoint.pth.tar' ,help='resume_file_name')
+		parser.add_argument('-p', '--epoch', type=str, default='0', help='epoch')
 		return parser
 	# Command line parser
 	def _parse_command_line():
@@ -26,6 +27,7 @@ class ConfigParser:
 			config = json.load(f)
 		if opt.continue_exp:
 			config['contPath'] = os.path.join(config['expPath'], opt.continue_exp)
+		opt.epoch = float(opt.epoch)
 		config['expPath'] = os.path.join(config['expPath'], opt.exp)
 		print('config: ')
 		print(json.dumps(config, indent = 4))
