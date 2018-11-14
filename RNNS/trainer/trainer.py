@@ -56,6 +56,7 @@ class Trainer(object):
 		minLoss = float('inf')
 		epoch = config['opt'].epoch
 		while True:
+			print('epoch: '+str(epoch))
 			net.train()
 			self.adjust_learning_rate(self.optimizer, epoch)
 			ld = iter(loader.ldTrain)
