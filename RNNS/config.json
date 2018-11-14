@@ -1,7 +1,7 @@
 {
   "expPath": "./exp",
   "loader": {
-    "batchSize": 32,
+    "batchSize": 64,
     "isTrans": 0,
     "wordDict": "../AuxData/wordDict",
     "posStyleDict": "../AuxData/pos_style_count",
@@ -11,7 +11,7 @@
     "testFile": "../Data/yelp/sentiment.test"
   },
   "trainer":{
-    "lr": 1e-4
+    "lr": 2e-4
   },
   "model":{
     "embedding": "../AuxData/word2vec.npy", 

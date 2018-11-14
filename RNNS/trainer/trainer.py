@@ -13,6 +13,12 @@ class Trainer(object):
 		self.savePath = savePath
 		os.makedirs(self.savePath, exist_ok=True)
 
+	def adjust_learning_rate(self, optimizer, epoch):
+    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+		lr = self.lr * (0.5 ** (epoch // 30))
+		for param_group in optimizer.param_groups:
+			param_group['lr'] = lr
+
 	def devLoss(self, ld, net, crit):
 		net.eval()
 		ld = iter(ld)
@@ -48,8 +54,10 @@ class Trainer(object):
 		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
 		# train
 		minLoss = float('inf')
+		epoch = 0.
 		while True:
 			net.train()
+			self.adjust_learning_rate(self.optimizer, epoch)
 			ld = iter(loader.ldTrain)
 			numIters = len(ld)
 			qdar = tqdm.tqdm(range(numIters),
@@ -58,7 +66,7 @@ class Trainer(object):
 			for itr in qdar: #range(len(ld)):
 				inputs = makeInp(next(ld))
 				with torch.set_grad_enabled(True):
-					outputs = net(inputs)
+					outputs = net(inputs, teacher_forcing_ratio=(1-epoch/50))
 					loss = crit(outputs,inputs)
 				self.optimizer.zero_grad()
 				loss.backward()
@@ -76,3 +84,4 @@ class Trainer(object):
 			if devLoss < minLoss:
 				minLoss = devLoss
 				self.saveNet(net,isBest=True)
+			epoch += 1

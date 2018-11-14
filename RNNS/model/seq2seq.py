@@ -66,8 +66,7 @@ class Seq2seq(nn.Module):
 
 	def forward(self, inputs, target_variable=None,
 				teacher_forcing_ratio=0):
-		if self.training:
-			teacher_forcing_ratio=0.5
+		tf_ratio = teacher_forcing_ratio if self.training else 0
 		encoder_outputs0, encoder_hidden0 = self.encoder0(inputs['brk_sentence'], inputs['bs_inp_lengths'])
 		encoder_outputs1, encoder_hidden1 = self.encoder1(inputs['marker'], inputs['mk_inp_lengths'])
 		encoder_outputs = torch.cat((encoder_outputs0,encoder_outputs1),1)
@@ -77,7 +76,7 @@ class Seq2seq(nn.Module):
 							  encoder_hidden=None, #encoder_hidden0,
 							  encoder_outputs=encoder_outputs,
 							  function=self.decode_function,
-							  teacher_forcing_ratio=teacher_forcing_ratio,
+							  teacher_forcing_ratio=tf_ratio,
 							  outputs_maxlen=max(inputs['st_inp_lengths']))
 		return result
 
