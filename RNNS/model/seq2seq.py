@@ -38,7 +38,7 @@ class Seq2seq(nn.Module):
 
 	"""
 
-	def __init__(self, embedding=None, wordDict=None, hidden_size=300, input_dropout_p=0, max_len=100, dropout_p=0, n_layers=1, bidirectional=False, rnn_cell='gru', decode_function=F.log_softmax):
+	def __init__(self, embedding=None, wordDict=None, hidden_size=300, style_size=100, input_dropout_p=0, max_len=100, dropout_p=0, n_layers=1, bidirectional=False, rnn_cell='gru', decode_function=F.log_softmax):
 		super(Seq2seq, self).__init__()
 		print('net...')
 		if embedding==None:
@@ -53,10 +53,8 @@ class Seq2seq(nn.Module):
 		self.encoder0 = EncoderRNN(vocab_size, max_len, hidden_size, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
 				embedding=embedding, update_embedding=False)
-		self.encoder1 = EncoderRNN(vocab_size, max_len, hidden_size,
-				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
-				embedding=embedding, update_embedding=False)
-		self.decoder = DecoderRNN(vocab_size, max_len, int(2*hidden_size), sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
+		self.style_emb = nn.Embedding(2,style_size)
+		self.decoder = DecoderRNN(vocab_size, max_len, int((hidden_size+style_size)*(bidirectional+1)), sos_id, eos_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=False, embedding=embedding, update_embedding=False)
 		self.decode_function = decode_function
 
@@ -67,13 +65,12 @@ class Seq2seq(nn.Module):
 	def forward(self, inputs, target_variable=None,
 				teacher_forcing_ratio=0):
 		tf_ratio = teacher_forcing_ratio if self.training else 0
-		encoder_outputs0, encoder_hidden0 = self.encoder0(inputs['brk_sentence'], inputs['bs_inp_lengths'])
-		encoder_outputs1, encoder_hidden1 = self.encoder1(inputs['marker'], inputs['mk_inp_lengths'])
-		encoder_outputs = torch.cat((encoder_outputs0,encoder_outputs1),1)
-		encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),2).repeat(int(max(inputs['st_inp_lengths'])),1,1).transpose(0,1)
-		result = self.decoder(inputs=encoder_hidden, #inputs['sentence'],#target_variable,
-							  target_inps=inputs['sentence'],
-							  encoder_hidden=encoder_hidden[:,:1].transpose(0,1), #encoder_hidden0,
+		encoder_outputs, encoder_hidden = self.encoder0(inputs['brk_sentence'], inputs['bs_inp_lengths'])
+		# encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),2).repeat(int(max(inputs['st_inp_lengths'])),1,1).transpose(0,1)
+		style_embedding = self.style_emb(inputs['style']).transpose(0,1).repeat(encoder_hidden.shape[0],1,1)
+		encoder_hidden = torch.cat((style_embedding, encoder_hidden),2)  #cat style embedding + hidden
+		result = self.decoder(inputs=inputs['sentence'],#target_variable,
+							  encoder_hidden=encoder_hidden, #encoder_hidden0,
 							  encoder_outputs=encoder_outputs,
 							  function=self.decode_function,
 							  teacher_forcing_ratio=tf_ratio,

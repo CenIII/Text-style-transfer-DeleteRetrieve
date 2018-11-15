@@ -32,7 +32,7 @@ def seq_collate(batch):
 	sent, stLengths = extract(2)
 	return {'brk_sentence': brk_sentence,
 			'bs_inp_lengths':seqLengths,
-			'marker': marker,
+			'style': marker,
 			'mk_inp_lengths':mkLengths,
 			'sentence':sent,
 			'st_inp_lengths':stLengths }

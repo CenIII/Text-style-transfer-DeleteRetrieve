@@ -8,7 +8,7 @@ class YelpDataset(Dataset):
 	"""docstring for Dataset"""
 	# dataset behave differently when requesting label or unlabel data
 	POS = 1
-	NEG = -1
+	NEG = 0
 	OppStyle = {POS:NEG,NEG:POS}
 	def __init__(self, config, datafile): #, wordDictFile): #, labeled=True, needLabel=True):
 		super(YelpDataset, self).__init__()
@@ -73,7 +73,7 @@ class YelpDataset(Dataset):
 		if cnt==0:
 			print(sentence)
 		marker = cur[0].split(' ')
-		marker = self.applyNoise(marker, style_count)
+		# marker = self.applyNoise(marker, style_count)
 		return words[:cur[1]]+['<unk>']+words[cur[2]:], marker
 
 	def retrieveTargetMarker(self, brkSentence, targetStyle):
@@ -118,13 +118,13 @@ class YelpDataset(Dataset):
 		style, sentence = self.data[idx]
 		# print('style: '+str(style)+' sentence:'+str(sentence))
 		brkSentence, marker = self.extractMarker(sentence, style=style)
-		if self.isTrans:
-			marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
+		# if self.isTrans:
+		# 	marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
 		brkSentence, marker = self.word2index([brkSentence, marker])
 		sentence = self.word2index([sentence],sos=True)[0]
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
-		return (brkSentence, marker, sentence) #targetMarker
+		return (brkSentence, [style], sentence) #targetMarker
 
 
 class LoaderHandler(object):
