@@ -38,6 +38,7 @@ for dataset in ['yelp/']:
 				line = f.readline()
 
 wordlist.append('<unk>')
+wordlist.append('<m_end>')
 wordlist.append('@@START@@')
 wordlist.append('@@END@@')
 vocabs = set(wordlist)
