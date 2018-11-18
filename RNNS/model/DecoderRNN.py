@@ -413,6 +413,8 @@ class DecoderRNN(BaseRNN):
                         mk_cur[b] += 1
                 decoder_input = torch.tensor(decoder_input).unsqueeze(1)
                 # decoder_input = symbols
+                if torch.cuda.is_available():
+                    decoder_input = decoder_input.cuda()
 
         ret_dict[DecoderRNN.KEY_SEQUENCE] = sequence_symbols
         ret_dict[DecoderRNN.KEY_LENGTH] = lengths.tolist()
