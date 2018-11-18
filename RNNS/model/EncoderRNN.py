@@ -1,6 +1,7 @@
 import torch.nn as nn
 
 from .baseRNN import BaseRNN
+import numpy as np
 
 class EncoderRNN(BaseRNN):
     r"""
@@ -65,7 +66,11 @@ class EncoderRNN(BaseRNN):
             - **output** (batch, seq_len, hidden_size): variable containing the encoded features of the input sequence
             - **hidden** (num_layers * num_directions, batch, hidden_size): variable containing the features in the hidden state h
         """
-	
+
+        inds = np.argsort(-input_lengths)
+        input_var = input_var[inds]
+        input_lengths = input_lengths[inds]
+        rev_inds = np.argsort(inds)
         embedded = self.embedding(input_var)
         embedded = self.input_dropout(embedded)
         if self.variable_lengths:
@@ -73,4 +78,7 @@ class EncoderRNN(BaseRNN):
         output, hidden = self.rnn(embedded)
         if self.variable_lengths:
             output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
+        output = output[rev_inds]
+        hidden = hidden[:,rev_inds]
+
         return output, hidden

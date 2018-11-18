@@ -25,17 +25,19 @@ def seq_collate(batch):
 		for i in range(batchSize):
 			packed[i][:lengths[i]] = batch[i][ind]
 		lengths = np.array(lengths)
-		inds = np.argsort(lengths)[::-1]
-		return torch.LongTensor(packed[inds]), torch.tensor(lengths[inds])
+		# inds = np.argsort(lengths)[::-1]
+		return torch.LongTensor(packed), torch.tensor(lengths)
 	brk_sentence, seqLengths = extract(0)
-	marker, mkLengths = extract(1) 
+	style, styleLengths = extract(1) 
 	sent, stLengths = extract(2)
+	marker, mkLengths = extract(3)
 	return {'brk_sentence': brk_sentence,
 			'bs_inp_lengths':seqLengths,
-			'style': marker,
-			'mk_inp_lengths':mkLengths,
+			'style': style,
 			'sentence':sent,
-			'st_inp_lengths':stLengths }
+			'st_inp_lengths':stLengths,
+			'marker':marker,
+			'mk_inp_lengths':mkLengths }
 
 def reloadModel(model,config):
 	checkpoint = os.path.join(config['contPath'], config['opt'].resume_file)

@@ -74,7 +74,7 @@ class YelpDataset(Dataset):
 			print(sentence)
 		marker = cur[0].split(' ')
 		# marker = self.applyNoise(marker, style_count)
-		return words[:cur[1]]+['<unk>']+words[cur[2]:], marker
+		return words[:cur[1]]+['<unk>']+['<m_end>']+words[cur[2]:], marker, words[:cur[1]]+['<unk>']+marker+['<m_end>']+words[cur[2]:]
 
 	def retrieveTargetMarker(self, brkSentence, targetStyle):
 		# an API wrapper
@@ -117,14 +117,15 @@ class YelpDataset(Dataset):
 	def loadOne(self,idx):
 		style, sentence = self.data[idx]
 		# print('style: '+str(style)+' sentence:'+str(sentence))
-		brkSentence, marker = self.extractMarker(sentence, style=style)
+		brkSentence, marker, sentence = self.extractMarker(sentence, style=style)
+		# print(sentence)
 		# if self.isTrans:
 		# 	marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
 		brkSentence, marker = self.word2index([brkSentence, marker])
 		sentence = self.word2index([sentence],sos=True)[0]
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
-		return (brkSentence, [style], sentence) #targetMarker
+		return (brkSentence, [style], sentence, marker) #targetMarker
 
 
 class LoaderHandler(object):

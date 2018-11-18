@@ -287,7 +287,7 @@ class DecoderRNN(BaseRNN):
     KEY_SEQUENCE = 'sequence'
 
     def __init__(self, vocab_size, max_len, hidden_size,
-            sos_id, eos_id,
+            sos_id, eos_id, unk_id,
             n_layers=1, rnn_cell='gru', bidirectional=False,
             input_dropout_p=0, dropout_p=0, use_attention=False, embedding=None,update_embedding=False):
         super(DecoderRNN, self).__init__(vocab_size, max_len, hidden_size,
@@ -302,6 +302,7 @@ class DecoderRNN(BaseRNN):
         self.use_attention = use_attention
         self.eos_id = eos_id
         self.sos_id = sos_id
+        self.unk_id = unk_id
 
         self.init_input = None
 
@@ -332,6 +333,14 @@ class DecoderRNN(BaseRNN):
 
     def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None,
                     function=F.log_softmax, teacher_forcing_ratio=0, outputs_maxlen=None):
+        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+        inputs_bak = inputs.copy()
+        inputs = inputs[0]
+        # if use_teacher_forcing:
+        #     inputs = inputs[0]
+        # else:
+        #     inputs = inputs[1]
+
         if outputs_maxlen:
             self.max_length = outputs_maxlen
         ret_dict = dict()
@@ -342,7 +351,7 @@ class DecoderRNN(BaseRNN):
                                                              function, teacher_forcing_ratio)
         decoder_hidden = self._init_state(encoder_hidden)
 
-        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+        # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
         decoder_outputs = []
         sequence_symbols = []
@@ -377,13 +386,33 @@ class DecoderRNN(BaseRNN):
                     step_attn = None
                 decode(di, step_output, step_attn)
         else:
-            decoder_input = inputs[:, 0].unsqueeze(1)
+            decoder_input =  inputs_bak[0][:, 0].unsqueeze(1)
+            cur = [0 for i in range(batch_size)]
+            unk_state = [False for i in range(batch_size)]
+            mk_cur = [0 for i in range(batch_size)]
+
             for di in range(max_length):
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                          function=function)
                 step_output = decoder_output.squeeze(1)
                 symbols = decode(di, step_output, step_attn)
-                decoder_input = symbols
+                decoder_input = []
+                for b in range(batch_size):
+                    if not unk_state[b]:
+                        if cur[b] >= len(inputs_bak[1][b]):
+                            decoder_input.append(torch.tensor(0))
+                            continue
+                        decoder_input.append(inputs_bak[1][b][cur[b]])
+                        if inputs_bak[1][b][cur[b]].data.eq(self.unk_id):
+                            unk_state[b] = True
+                        cur[b] += 1
+                    else:
+                        decoder_input.append(symbols[b])
+                        if mk_cur[b]==(inputs_bak[2][b]-1):
+                            unk_state[b] = False
+                        mk_cur[b] += 1
+                decoder_input = torch.tensor(decoder_input).unsqueeze(1)
+                # decoder_input = symbols
 
         ret_dict[DecoderRNN.KEY_SEQUENCE] = sequence_symbols
         ret_dict[DecoderRNN.KEY_LENGTH] = lengths.tolist()
