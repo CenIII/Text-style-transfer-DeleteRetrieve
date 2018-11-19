@@ -12,6 +12,7 @@ class ConfigParser:
 		# parser.add_argument('-v', '--evaluate', action='store_true', help='load predicted results')
 		parser.add_argument('-f', '--resume_file', type=str, default='checkpoint.pth.tar' ,help='resume_file_name')
 		parser.add_argument('-p', '--epoch', type=str, default='0', help='epoch')
+		parser.add_argument('-t', '--trans_style', type=str, default='0', help='epoch')
 		return parser
 	# Command line parser
 	def _parse_command_line():
@@ -19,6 +20,8 @@ class ConfigParser:
 		args = parser.parse_args()
 		print('options: ')
 		print(json.dumps(vars(args), indent = 4))
+		if args.mode=='train':
+			assert(args.trans_style==0)
 		return args
 
 	# Config file parser

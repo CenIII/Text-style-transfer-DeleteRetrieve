@@ -42,7 +42,7 @@ def seq_collate(batch):
 def reloadModel(model,config):
 	checkpoint = os.path.join(config['contPath'], config['opt'].resume_file)
 	print("=> Reloading checkpoint '{}': model".format(checkpoint))
-	checkpoint = torch.load(checkpoint)
+	checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
 	# model.load_state_dict(self.checkpoint['state_dict'])
 	model_dict = model.state_dict()
 	# 1. filter out unnecessary keys

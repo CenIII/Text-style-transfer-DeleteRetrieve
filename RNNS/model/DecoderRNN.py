@@ -287,7 +287,7 @@ class DecoderRNN(BaseRNN):
     KEY_SEQUENCE = 'sequence'
 
     def __init__(self, vocab_size, max_len, hidden_size,
-            sos_id, eos_id, unk_id,
+            sos_id, eos_id, unk_id, m_end_id,
             n_layers=1, rnn_cell='gru', bidirectional=False,
             input_dropout_p=0, dropout_p=0, use_attention=False, embedding=None,update_embedding=False):
         super(DecoderRNN, self).__init__(vocab_size, max_len, hidden_size,
@@ -303,6 +303,7 @@ class DecoderRNN(BaseRNN):
         self.eos_id = eos_id
         self.sos_id = sos_id
         self.unk_id = unk_id
+        self.m_end_id = m_end_id
 
         self.init_input = None
 
@@ -387,8 +388,13 @@ class DecoderRNN(BaseRNN):
                 decode(di, step_output, step_attn)
         else:
             decoder_input =  inputs_bak[0][:, 0].unsqueeze(1)
+
+            # three variables used to manipulate decoder inputs
+            # cursors of brk_sentence
             cur = [0 for i in range(batch_size)]
+            # states: unk or not unk
             unk_state = [False for i in range(batch_size)]
+            # cursors of marker
             mk_cur = [0 for i in range(batch_size)]
 
             for di in range(max_length):
@@ -397,7 +403,10 @@ class DecoderRNN(BaseRNN):
                 step_output = decoder_output.squeeze(1)
                 symbols = decode(di, step_output, step_attn)
                 decoder_input = []
+
+                # manipulate decoder inputs 
                 for b in range(batch_size):
+                    # if not in "unk" state, use words from broken sentence.
                     if not unk_state[b]:
                         if cur[b] >= len(inputs_bak[1][b]):
                             decoder_input.append(torch.tensor(0))
@@ -406,9 +415,13 @@ class DecoderRNN(BaseRNN):
                         if inputs_bak[1][b][cur[b]].data.eq(self.unk_id):
                             unk_state[b] = True
                         cur[b] += 1
-                    else:
+                    else:# if in "unk" state, use the symbol generated at last time step.
                         decoder_input.append(symbols[b])
-                        if mk_cur[b]==(inputs_bak[2][b]-1):
+                        if self.training:
+                            checkMK = (mk_cur[b]==(inputs_bak[2][b]-1))
+                        else:
+                            checkMK = symbols[b].data.eq(self.m_end_id)
+                        if checkMK:
                             unk_state[b] = False
                         mk_cur[b] += 1
                 decoder_input = torch.tensor(decoder_input).unsqueeze(1)

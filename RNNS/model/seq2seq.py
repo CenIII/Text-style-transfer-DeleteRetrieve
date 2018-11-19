@@ -51,11 +51,12 @@ class Seq2seq(nn.Module):
 		sos_id = self.wordDict['@@START@@']
 		eos_id = self.wordDict['@@END@@']
 		unk_id = self.wordDict['<unk>']
+		m_end_id = self.wordDict['<m_end>']
 		self.encoder0 = EncoderRNN(vocab_size, max_len, hidden_size, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
 				embedding=embedding, update_embedding=False)
 		self.style_emb = nn.Embedding(2,style_size)
-		self.decoder = DecoderRNN(vocab_size, max_len, int((hidden_size+style_size)*(bidirectional+1)), sos_id, eos_id, unk_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
+		self.decoder = DecoderRNN(vocab_size, max_len, int((hidden_size+style_size)*(bidirectional+1)), sos_id, eos_id, unk_id, m_end_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=False, embedding=embedding, update_embedding=False)
 		self.decode_function = decode_function
 

@@ -23,7 +23,7 @@ class YelpDataset(Dataset):
 			self.wordDict = pickle.load(fp)
 		self.sos_id = self.wordDict['@@START@@']
 		self.eos_id = self.wordDict['@@END@@']
-		self.isTrans = config['isTrans']
+		self.isTrans = config['opt'].trans_style
 
 	def isValidSentence(self,sentence):
 		if(sentence == [] or 
@@ -125,6 +125,8 @@ class YelpDataset(Dataset):
 		brkSentence, marker = self.word2index([brkSentence, marker])
 		sentence = self.word2index([sentence],sos=True)[0]
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
+		if self.isTrans:
+			style = self.OppStyle[style]
 		return (brkSentence, [style], sentence, marker) #targetMarker
 
 
