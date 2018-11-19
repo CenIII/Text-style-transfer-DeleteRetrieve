@@ -3,7 +3,7 @@ import os
 import pickle
 import torch
 import tqdm
-from utils import makeInp
+from utils import makeInp, seq_collate
 
 class Evaluator(object):
 	"""docstring for Evaluator"""
@@ -27,18 +27,20 @@ class Evaluator(object):
 		else:
 			return self.ind2wordDict[sequence]
 
-	def predictLine(self, ld, net, line):
-		# get marker
-
-		# retrieve
-
-		# word2ind
-
+	def predictLine(self, ld, net, line, style):
+		batch = ld.dataset.loadLine(line, style)
+		inp = seq_collate([batch])
 		# predict
-
+		out = net(inp)
 		# ind2word
-
-		pass
+		pred = out[2]['sequence']
+		pred = self.ind2word(pred)
+		pred = [pred[i][0][0] for i in range(len(pred))]
+		if '<unk>' in pred:
+			pred.remove('<unk>')
+		if '<m_end>' in pred:
+			pred.remove('<m_end>')
+		return ' '.join(pred)
 
 	def dumpOuts(self, predList):
 		# each pred take 3 lines

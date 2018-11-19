@@ -53,7 +53,9 @@ class YelpDataset(Dataset):
 		return len(self.data)
 
 	def __getitem__(self, idx):
-		return self.loadOne(idx)
+		style, sentence = self.data[idx]
+		# print('style: '+str(style)+' sentence:'+str(sentence))
+		return self.loadLine(sentence, style)
 
 	def extractMarker(self, sentence, style):
 		maxc = -float('inf')
@@ -81,6 +83,20 @@ class YelpDataset(Dataset):
 		# whether we need deleted marker for this task or not is debatable
 		pass
 	# 	return targetMarker
+
+	def loadLine(self, sentence, style):
+		# sentence = sentence.split(' ')
+		brkSentence, marker, sentence = self.extractMarker(sentence, style=style)
+		# print(sentence)
+		# if self.isTrans:
+		# 	marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
+		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
+		brkSentence, marker = self.word2index([brkSentence, marker])
+		sentence = self.word2index([sentence],sos=True)[0]
+		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
+		if self.isTrans:
+			style = self.OppStyle[style]
+		return (brkSentence, [style], sentence, marker) #targetMarker
 
 	def applyNoise(self, marker, style_count):
 		if len(marker) <= 1:
@@ -113,21 +129,7 @@ class YelpDataset(Dataset):
 			indArr = np.array(indArr)
 			resList.append(indArr)
 		return resList
-
-	def loadOne(self,idx):
-		style, sentence = self.data[idx]
-		# print('style: '+str(style)+' sentence:'+str(sentence))
-		brkSentence, marker, sentence = self.extractMarker(sentence, style=style)
-		# print(sentence)
-		# if self.isTrans:
-		# 	marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
-		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
-		brkSentence, marker = self.word2index([brkSentence, marker])
-		sentence = self.word2index([sentence],sos=True)[0]
-		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
-		if self.isTrans:
-			style = self.OppStyle[style]
-		return (brkSentence, [style], sentence, marker) #targetMarker
+		
 
 
 class LoaderHandler(object):
@@ -135,8 +137,11 @@ class LoaderHandler(object):
 	def __init__(self, config):
 		super(LoaderHandler, self).__init__()
 		print('loader handler...')	
-		trainData = YelpDataset(config,config['trainFile'])
-		self.ldTrain = DataLoader(trainData,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
+		mode = config['opt'].mode
+		config = config['loader']
+		if mode == 'train':
+			trainData = YelpDataset(config,config['trainFile'])
+			self.ldTrain = DataLoader(trainData,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
 		devData = YelpDataset(config,config['devFile'])
 		self.ldDev = DataLoader(devData,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
 		self.ldDevEval = DataLoader(devData,batch_size=1, shuffle=False, collate_fn=seq_collate)

@@ -6,13 +6,13 @@ class ConfigParser:
 
 	def _create_command_line_parser():
 		parser = argparse.ArgumentParser()
-		parser.add_argument('-m', '--mode', type=str, choices=['train','val','test'], default='train', help='running mode: [train | val | test]' )
+		parser.add_argument('-m', '--mode', type=str, choices=['train','val','test','online'], default='train', help='running mode: [train | val | test]' )
 		parser.add_argument('-c', '--continue_exp', type=str, help='continue exp')
 		parser.add_argument('-e', '--exp', type=str, default='pose', help='experiments name: [anystring]')
 		# parser.add_argument('-v', '--evaluate', action='store_true', help='load predicted results')
 		parser.add_argument('-f', '--resume_file', type=str, default='checkpoint.pth.tar' ,help='resume_file_name')
 		parser.add_argument('-p', '--epoch', type=str, default='0', help='epoch')
-		parser.add_argument('-t', '--trans_style', type=str, default='0', help='transfer to opposite style or just reconstruction? can not be 1 when training.')
+		parser.add_argument('-t', '--trans_style', type=int, default=0, help='transfer to opposite style or just reconstruction? can not be 1 when training.')
 		return parser
 	# Command line parser
 	def _parse_command_line():

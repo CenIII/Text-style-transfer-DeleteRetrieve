@@ -4,6 +4,7 @@ from evaluator import Evaluator
 from trainer import Trainer
 from model import Seq2seq, Criterion
 from utils import ConfigParser, utils
+import fileinput
 
 #todo: 
 # 1. add word ind trans tools as a class to utils? can be used by evaluator and loader.
@@ -26,7 +27,7 @@ from utils import ConfigParser, utils
 	# run.py
 
 def runTrain(config):
-	loader = LoaderHandler(config['loader'])
+	loader = LoaderHandler(config)
 	net = Seq2seq(**config['model'])
 	if config['opt'].continue_exp:
 		net = utils.reloadModel(net, config)
@@ -39,7 +40,7 @@ def runTrain(config):
 	trainer.train(loader, net, crit, evaluator, config)
 
 def runVal(config):
-	loader = LoaderHandler(config['loader'])
+	loader = LoaderHandler(config)
 	net = Seq2seq(**config['model'])
 	if torch.cuda.is_available():
 		net = net.cuda()
@@ -47,12 +48,34 @@ def runVal(config):
 	evaluator = Evaluator(config['evaluator'],config['expPath'])
 	evaluator.predict(loader,net)
 
+def runOnline(config):
+	loader = LoaderHandler(config)
+	net = Seq2seq(**config['model'])
+	if torch.cuda.is_available():
+		net = net.cuda()
+	net = utils.reloadModel(net,config)
+	evaluator = Evaluator(config['evaluator'],config['expPath'])
+	
+	while True:
+		line = input("Enter a sentence: ")
+		line = line.split(' ')
+		style = int(line[0])
+		line = line[1:]
+		pred = evaluator.predictLine(loader.ldDevEval, net, line, style)
+		print(pred)
+
+
 def main():
 	config = ConfigParser.parse_config()
-	if config['opt'].mode == 'train':
+	mode = config['opt'].mode
+	if mode == 'train':
 		runTrain(config)
-	else:
+	elif mode == 'val':
 		runVal(config)
+	elif mode == 'online':
+		runOnline(config)
+	else:
+		pass
 	
 if __name__ == '__main__':
 	main() 
