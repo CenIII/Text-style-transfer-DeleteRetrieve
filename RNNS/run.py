@@ -55,9 +55,9 @@ def runOnline(config):
 		net = net.cuda()
 	net = utils.reloadModel(net,config)
 	evaluator = Evaluator(config['evaluator'],config['expPath'])
-	
+	print("Enter your sentence and its style: (e.g.: 0 the chicken was horrible)")
 	while True:
-		line = input("Enter a sentence: ")
+		line = input("#: ")
 		line = line.split(' ')
 		style = int(line[0])
 		line = line[1:]
