@@ -32,6 +32,7 @@ class ConfigParser:
 			config['contPath'] = os.path.join(config['expPath'], opt.continue_exp)
 		opt.epoch = float(opt.epoch)
 		config['expPath'] = os.path.join(config['expPath'], opt.exp)
+		config['loader']['isTrans'] = int(opt.trans_style)
 		print('config: ')
 		print(json.dumps(config, indent = 4))
 		config['opt'] = opt

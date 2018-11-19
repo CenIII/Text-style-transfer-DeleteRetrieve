@@ -23,7 +23,7 @@ class YelpDataset(Dataset):
 			self.wordDict = pickle.load(fp)
 		self.sos_id = self.wordDict['@@START@@']
 		self.eos_id = self.wordDict['@@END@@']
-		self.isTrans = config['opt'].trans_style
+		self.isTrans = config['isTrans']
 
 	def isValidSentence(self,sentence):
 		if(sentence == [] or 
