@@ -34,13 +34,15 @@ class Evaluator(object):
 		# predict
 		out = net(inp)
 		# ind2word
-		pred = out[2]['sequence'][:outputs[2]['length'][0]]
+		pred = out[2]['sequence'][:out[2]['length'][0]]
 		pred = self.ind2word(pred)
 		pred = [pred[i][0][0] for i in range(len(pred))]
 		if '<unk>' in pred:
 			pred.remove('<unk>')
 		if '<m_end>' in pred:
 			pred.remove('<m_end>')
+		if '@@END@@' in pred:
+			pred.remove('@@END@@')
 		return ' '.join(pred)
 
 	def dumpOuts(self, predList):
