@@ -22,9 +22,9 @@ class Trainer(object):
 	def devLoss(self, ld, net, crit):
 		net.eval()
 		ld = iter(ld)
-		devLoss = np.zeros(len(ld))
+		numIters = len(ld)
+		devLoss = np.zeros(numIters)
 		with torch.set_grad_enabled(False):
-			numIters = len(ld)
 			qdar = tqdm.tqdm(range(numIters),
 									total= numIters,
 									ascii=True)
@@ -64,10 +64,10 @@ class Trainer(object):
 			qdar = tqdm.tqdm(range(numIters),
 									total= numIters,
 									ascii=True)
-			for itr in qdar: #range(len(ld)):
+			for itr in qdar: 
 				inputs = makeInp(next(ld))
 				with torch.set_grad_enabled(True):
-					outputs = net(inputs, teacher_forcing_ratio=0.5)#max((1-epoch/30),0))
+					outputs = net(inputs, teacher_forcing_ratio=max((1-epoch/10),0))
 					loss = crit(outputs,inputs)
 				self.optimizer.zero_grad()
 				loss.backward()
@@ -80,7 +80,6 @@ class Trainer(object):
 			devLoss = self.devLoss(loader.ldDev,net,crit)
 			# eval on dev
 			# BLEU, Acc = evaluator.evaluate(loader.ldDevEval, net)
-
 			# save best model
 			if devLoss < minLoss:
 				minLoss = devLoss

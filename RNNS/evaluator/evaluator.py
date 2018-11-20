@@ -28,12 +28,13 @@ class Evaluator(object):
 			return self.ind2wordDict[sequence]
 
 	def predictLine(self, ld, net, line, style):
+		net.eval()
 		batch = ld.dataset.loadLine(line, style)
 		inp = seq_collate([batch])
 		# predict
 		out = net(inp)
 		# ind2word
-		pred = out[2]['sequence']
+		pred = out[2]['sequence'][:outputs[2]['length'][0]]
 		pred = self.ind2word(pred)
 		pred = [pred[i][0][0] for i in range(len(pred))]
 		if '<unk>' in pred:
@@ -64,6 +65,7 @@ class Evaluator(object):
 				cnt += 1
 
 	def predict(self, ld, net):
+		net.eval()
 		ld = iter(ld.ldDevEval)
 		predList = [] #([brkSent],[marker],[pred])
 		with torch.set_grad_enabled(False):
@@ -78,7 +80,7 @@ class Evaluator(object):
 				brkSent = inputs['brk_sentence']
 				marker = inputs['marker']
 				sentence = inputs['sentence']
-				pred = outputs[2]['sequence']
+				pred = outputs[2]['sequence'][:outputs[2]['length'][0]]
 
 				predList.append([sentence,brkSent,marker,pred])
 		predList_w = self.ind2word(predList)

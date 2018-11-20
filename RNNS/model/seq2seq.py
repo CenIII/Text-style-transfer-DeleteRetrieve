@@ -52,7 +52,7 @@ class Seq2seq(nn.Module):
 		eos_id = self.wordDict['@@END@@']
 		unk_id = self.wordDict['<unk>']
 		m_end_id = self.wordDict['<m_end>']
-		self.encoder0 = EncoderRNN(vocab_size, max_len, hidden_size, 
+		self.encoder = EncoderRNN(vocab_size, max_len, hidden_size, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
 				embedding=embedding, update_embedding=False)
 		self.style_emb = nn.Embedding(2,style_size)
@@ -67,11 +67,10 @@ class Seq2seq(nn.Module):
 	def forward(self, inputs, target_variable=None,
 				teacher_forcing_ratio=0):
 		tf_ratio = teacher_forcing_ratio if self.training else 0
-		encoder_outputs, encoder_hidden = self.encoder0(inputs['brk_sentence'], inputs['bs_inp_lengths'])
-		# encoder_hidden = torch.cat((encoder_hidden0,encoder_hidden1),2).repeat(int(max(inputs['st_inp_lengths'])),1,1).transpose(0,1)
-		style_embedding = self.style_emb(inputs['style']).transpose(0,1).repeat(encoder_hidden.shape[0],1,1)
-		encoder_hidden = torch.cat((style_embedding, encoder_hidden),2)  #cat style embedding + hidden
+		encoder_outputs, encoder_hidden = self.encoder(inputs['brk_sentence'], inputs['bs_inp_lengths'])
+		style_embedding = self.style_emb(inputs['style'])
 		result = self.decoder(inputs=[inputs['sentence'],inputs['brk_sentence'],inputs['mk_inp_lengths']],#target_variable,
+							  style_embd=style_embedding,
 							  encoder_hidden=encoder_hidden, #encoder_hidden0,
 							  encoder_outputs=encoder_outputs,
 							  function=self.decode_function,

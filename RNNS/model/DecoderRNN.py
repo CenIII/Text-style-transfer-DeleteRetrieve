@@ -240,6 +240,7 @@ if torch.cuda.is_available():
 else:
     import torch as device
 
+EXTRA_LEN = 5
 
 class DecoderRNN(BaseRNN):
     r"""
@@ -332,15 +333,18 @@ class DecoderRNN(BaseRNN):
         predicted_softmax = self.out(output.contiguous().view(-1, self.hidden_size)).view(batch_size, output_size, -1)
         return predicted_softmax, hidden, attn
 
-    def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None,
+    def forward(self, inputs=None, style_embd=None, encoder_hidden=None, encoder_outputs=None,
                     function=F.log_softmax, teacher_forcing_ratio=0, outputs_maxlen=None):
-        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+        # inputs_bak: sentence, brk sentence, marker lengths
         inputs_bak = inputs.copy()
+        # inputs: sentence
         inputs = inputs[0]
-        # if use_teacher_forcing:
-        #     inputs = inputs[0]
-        # else:
-        #     inputs = inputs[1]
+        # cat style embedding with encoder_hidden
+        style_embd = style_embd.transpose(0,1).repeat(encoder_hidden.shape[0],1,1)
+        encoder_hidden = torch.cat((style_embd, encoder_hidden),2)  
+
+        # decide teacher forcing
+        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
         if outputs_maxlen:
             self.max_length = outputs_maxlen
@@ -351,8 +355,6 @@ class DecoderRNN(BaseRNN):
         inputs, batch_size, max_length = self._validate_args(inputs, encoder_hidden, encoder_outputs,
                                                              function, teacher_forcing_ratio)
         decoder_hidden = self._init_state(encoder_hidden)
-
-        # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
         decoder_outputs = []
         sequence_symbols = []
@@ -390,12 +392,9 @@ class DecoderRNN(BaseRNN):
             decoder_input =  inputs_bak[0][:, 0].unsqueeze(1)
 
             # three variables used to manipulate decoder inputs
-            # cursors of brk_sentence
-            cur = [0 for i in range(batch_size)]
-            # states: unk or not unk
-            unk_state = [False for i in range(batch_size)]
-            # cursors of marker
-            mk_cur = [0 for i in range(batch_size)]
+            cur = [0 for i in range(batch_size)] # cursors of brk_sentence
+            unk_state = [False for i in range(batch_size)] # states: unk or not unk
+            mk_cur = [0 for i in range(batch_size)] # cursors of marker
 
             for di in range(max_length):
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
@@ -479,5 +478,6 @@ class DecoderRNN(BaseRNN):
             max_length = self.max_length
         else:
             max_length = inputs.size(1) - 1 # minus the start of sequence symbol
-
+            if not self.training: # when evaluating, add more budget to the length. 
+                max_length += EXTRA_LEN
         return inputs, batch_size, max_length
