@@ -4,6 +4,7 @@ import pickle
 import torch
 import tqdm
 from utils import makeInp, seq_collate
+from Metrics import Metrics
 
 class Evaluator(object):
 	"""docstring for Evaluator"""
@@ -15,6 +16,7 @@ class Evaluator(object):
 		self.ind2wordDict = self._buildInd2Word(self.wordDict)
 		self.savePath = expPath
 		os.makedirs(self.savePath, exist_ok=True)
+		self.metrics = Metrics
 
 	def _buildInd2Word(self,wordDict):
 		vocabs = sorted(self.wordDict.items(), key=lambda x: x[1])
@@ -90,8 +92,10 @@ class Evaluator(object):
 		return predList
 
 	def evaluateMetrics(self, preds):
-		pass
-
+		bleu = self.metrics.BLEU(preds)
+		acc = self.metrics.Classify(preds)
+		return bleu, acc
+		
 		# evaluate
 	# def evaluate(self, ld, net):
 	# 	predList = self.predict(ld, net)
