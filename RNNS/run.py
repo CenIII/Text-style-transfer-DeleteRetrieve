@@ -45,8 +45,10 @@ def runVal(config):
 	if torch.cuda.is_available():
 		net = net.cuda()
 	net = utils.reloadModel(net,config)
-	evaluator = Evaluator(config['evaluator'],config['expPath'])
-	evaluator.predict(loader,net)
+	evaluator = Evaluator(config['evaluator'],config['expPath'], config)
+	evaluator.evaluate(loader, net)
+	print(bleu, acc)
+	return 
 
 def runOnline(config):
 	loader = LoaderHandler(config)
@@ -71,6 +73,8 @@ def main():
 	if mode == 'train':
 		runTrain(config)
 	elif mode == 'val':
+		runVal(config)
+	elif mode == 'test':
 		runVal(config)
 	elif mode == 'online':
 		runOnline(config)

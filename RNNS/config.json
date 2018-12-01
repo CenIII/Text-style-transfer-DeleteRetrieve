@@ -27,5 +27,9 @@
   "crit": 0,
   "evaluator":{
     "wordDict": "../AuxData/wordDict"
+  },
+  "metric":{
+    "ref_file": "../Data/yelp/reference",
+    "classifier_weight_path": "./exp/classifier"
   }
 }

@@ -4,7 +4,7 @@ import pickle
 import torch
 import tqdm
 from utils import makeInp, seq_collate
-from metrics import Metrics
+from .metrics import Metrics
 from model import Classifier
 
 class Evaluator(object):
@@ -17,8 +17,9 @@ class Evaluator(object):
 		self.ind2wordDict = self._buildInd2Word(self.wordDict)
 		self.savePath = expPath
 		os.makedirs(self.savePath, exist_ok=True)
-		classifier_net = Classifier(config_all)
-		self.metrics = Metrics('../exp/classifier', '../../Data/yelp/reference', classifier_net)
+		classifier_net = Classifier(**config_all["model"])
+		self.metrics = Metrics(config_all["metric"]["classifier_weight_path"], config_all["metric"]["ref_file"], classifier_net, config_all["model"]["wordDict"])
+		self.mode = config_all['opt'].mode
 
 	def _buildInd2Word(self,wordDict):
 		vocabs = sorted(self.wordDict.items(), key=lambda x: x[1])
@@ -72,8 +73,10 @@ class Evaluator(object):
 
 	def predict(self, ld, net):
 		net.eval()
-		ld = iter(ld.ldDevEval)
+		ld = ld.ldDevEval if self.mode=='val' else ld.ldTestEval
+		ld = iter(ld)
 		predList = [] #([brkSent],[marker],[pred])
+		styleList = []
 		with torch.set_grad_enabled(False):
 			numIters = len(ld)
 			qdar = tqdm.tqdm(range(numIters),
@@ -86,18 +89,52 @@ class Evaluator(object):
 				brkSent = inputs['brk_sentence']
 				marker = inputs['marker']
 				sentence = inputs['sentence']
+				style = inputs['style']
 				pred = outputs[2]['sequence'][:outputs[2]['length'][0]]
 
 				predList.append([sentence,brkSent,marker,pred])
-		predList_w = self.ind2word(predList)
+				styleList.append(style)
+		predList_w = self.ind2word(predList)		
 		self.dumpOuts(predList_w)
-		return predList
+		predList_w = self.constructSentence(predList_w)
+		return predList_w, styleList
+	
+	def constructSentence(self, predList_w):
+		results = []
+		tags = ['<unk>', '<m_end>','@@START@@', '@@END@@']
+		for sentence in predList_w:
+			result_sentence = []
+			idx = 0
+			for word in sentence[1][0]:
+				if word not in tags:
+					result_sentence.append(word)
+				elif (word == '<unk>'):
+					result_sentence += sentence[2][idx]
+					idx += 1
+			results.append(result_sentence)
+		return results
 
 	def evaluateMetrics(self, preds):
-		bleu = self.metrics.bleuMetrics(preds)
+		if self.mode == 'val':
+			bleu = -1
+		else:
+			bleu = self.metrics.bleuMetrics(preds)
 		acc = self.metrics.classifierMetrics(preds)
 		return bleu, acc
+
+	def evaluate(self, ld, net):
+		predList_w, styleList = self.predict(ld, net)
+		preds = {"positive":[],"negative":[]}
+		for i in range(len(predList_w)):
+			if styleList[i] == 1:
+				key = "positive"
+			else:
+				key = "negative"
+			preds[key].append(predList_w[i])
+		bleu,acc = self.evaluateMetrics(preds)
+		return bleu, acc
 		
+
 		# evaluate
 	# def evaluate(self, ld, net):
 	# 	predList = self.predict(ld, net)
