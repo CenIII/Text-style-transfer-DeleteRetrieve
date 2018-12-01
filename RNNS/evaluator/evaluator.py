@@ -17,7 +17,10 @@ class Evaluator(object):
 		self.ind2wordDict = self._buildInd2Word(self.wordDict)
 		self.savePath = expPath
 		os.makedirs(self.savePath, exist_ok=True)
+
+		config_all["model"]["bidirectional"] = 0
 		classifier_net = Classifier(**config_all["model"])
+		
 		self.metrics = Metrics(config_all["metric"]["classifier_weight_path"], config_all["metric"]["ref_file"], classifier_net, config_all["model"]["wordDict"])
 		self.mode = config_all['opt'].mode
 
@@ -126,7 +129,7 @@ class Evaluator(object):
 		predList_w, styleList = self.predict(ld, net)
 		preds = {"positive":[],"negative":[]}
 		for i in range(len(predList_w)):
-			if styleList[i] == 1:
+			if styleList[i] == 0:
 				key = "positive"
 			else:
 				key = "negative"

@@ -46,7 +46,7 @@ def runVal(config):
 		net = net.cuda()
 	net = utils.reloadModel(net,config)
 	evaluator = Evaluator(config['evaluator'],config['expPath'], config)
-	evaluator.evaluate(loader, net)
+	bleu, acc = evaluator.evaluate(loader, net)
 	print(bleu, acc)
 	return 
 
