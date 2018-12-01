@@ -360,10 +360,15 @@ class DecoderRNN(BaseRNN):
         sequence_symbols = []
         lengths = np.array([max_length] * batch_size)
 
-        def decode(step, step_output, step_attn):
+        def decode(step, step_output, step_attn, unk_state):
             decoder_outputs.append(step_output)
             if self.use_attention:
                 ret_dict[DecoderRNN.KEY_ATTN_SCORE].append(step_attn)
+            if not use_teacher_forcing and not self.training:
+                for b in range(len(decoder_outputs[-1])):
+                    if not unk_state[b]:
+                        decoder_outputs[-1][b][self.m_end_id] = 0
+
             symbols = decoder_outputs[-1].topk(1)[1]
             sequence_symbols.append(symbols)
 
@@ -401,7 +406,7 @@ class DecoderRNN(BaseRNN):
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                          function=function)
                 step_output = decoder_output.squeeze(1)
-                symbols = decode(di, step_output, step_attn)
+                symbols = decode(di, step_output, step_attn, unk_state)
                 decoder_input = []
 
                 # manipulate decoder inputs 
