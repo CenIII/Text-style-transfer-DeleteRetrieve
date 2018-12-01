@@ -32,8 +32,11 @@ def seq_collate(batch):
 		lengths = []
 		for seq in batch:
 			numMk = len(seq[ind])
-			lengths.append([len(seq[ind][i]) for i in range(numMk)])
-		return lengths
+			tmp = [len(seq[ind][0])]# for i in range(numMk)]
+			tmp += [0] if numMk==1 else [len(seq[ind][1])]
+			lengths.append(tmp)
+		lengths = np.array(lengths)
+		return torch.tensor(lengths)
 
 	brk_sentence, seqLengths = extract(0)
 	style, styleLengths = extract(1) 
