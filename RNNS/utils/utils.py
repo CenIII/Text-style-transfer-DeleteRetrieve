@@ -27,16 +27,25 @@ def seq_collate(batch):
 		lengths = np.array(lengths)
 		# inds = np.argsort(lengths)[::-1]
 		return torch.LongTensor(packed), torch.tensor(lengths)
+
+	def extract_marker_lengths(ind):
+		lengths = []
+		for seq in batch:
+			numMk = len(seq[ind])
+			lengths.append([len(seq[ind][i]) for i in range(numMk)])
+		return lengths
+
 	brk_sentence, seqLengths = extract(0)
 	style, styleLengths = extract(1) 
 	sent, stLengths = extract(2)
-	marker, mkLengths = extract(3)
+	# marker, mkLengths = extract(3)
+	mkLengths = extract_marker_lengths(3)
 	return {'brk_sentence': brk_sentence,
 			'bs_inp_lengths':seqLengths,
 			'style': style,
 			'sentence':sent,
 			'st_inp_lengths':stLengths,
-			'marker':marker,
+			# 'marker':marker,
 			'mk_inp_lengths':mkLengths }
 
 def reloadModel(model,config):

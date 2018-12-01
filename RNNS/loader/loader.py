@@ -58,25 +58,71 @@ class YelpDataset(Dataset):
 		return self.loadLine(sentence, style)
 
 	def extractMarker(self, sentence, style):
-		maxc = -float('inf')
+		maxc = np.array([-float('inf'),-float('inf')])
 		words = sentence
 		cnt = 0
+		mk = [None, None]
+		cur = 0
+
+		def rg():
+			g = []
+			for m in mk:
+				if m is not None:
+					g += list(range(m[1],m[2]))
+			return g
+
 		if style == self.POS:
 			style_count = self.pos_style_dict
 		elif style == self.NEG:
 			style_count = self.neg_style_dict
-		for n in range(1, 5):
+		for n in range(1, 3):
 			for l in range(0, len(words)-n+1):
 				tmp = ' '.join(words[l:l+n])
-				if style_count.get(tmp, 0) > maxc:
-					maxc = style_count.get(tmp, 0)
-					cur = (tmp, l ,l+n)
+				score = style_count.get(tmp, 0)
+				if score > min(maxc):
+					g = rg()
+					if l in g or l+n-1 in g:
+						continue
+					# print(score)
+					maxc[np.argmin(maxc)] = score
+					mk[cur] = (tmp, l ,l+n, score)
+					cur = (cur+1)%2
 					cnt += 1
 		if cnt==0:
 			print(sentence)
-		marker = cur[0].split(' ')
+
+		if None not in mk:
+			ind = 0 if mk[0][3]<mk[1][3] else 1
+			if len(words)==2 or mk[ind][3]<10:
+				mk[ind] = None
+
+		brkSent = []
+		pt = 0
+		marker = []
+		sentence = []
+		if None not in mk:
+			if mk[0][1] > mk[1][1]:
+				tmp = mk[0]
+				mk[0] = mk[1]
+				mk[1] = tmp
+
+			if mk[0][2] == mk[1][1]:
+				mk[0] = (mk[0][0]+' '+mk[1][0],mk[0][1],mk[1][2])
+				mk[1] = None
+
+		for m in mk:
+			if m is not None:
+				brkSent += words[pt:m[1]]+['<unk>']+['<m_end>']
+				marker.append(m[0].split(' '))
+				sentence += words[pt:m[1]]+['<unk>']+marker[-1]+['<m_end>']
+				pt = m[2]
+		brkSent += words[pt:]
+		sentence += words[pt:]
+		# print(str(brkSent)+'>>><<<<'+str(marker)+'<<<>>>>'+str(sentence))
+
+		# marker = mk[0].split(' ')
 		# marker = self.applyNoise(marker, style_count)
-		return words[:cur[1]]+['<unk>']+['<m_end>']+words[cur[2]:], marker, words[:cur[1]]+['<unk>']+marker+['<m_end>']+words[cur[2]:]
+		return brkSent, marker,sentence #words[:mk[1]]+['<unk>']+['<m_end>']+words[mk[2]:], marker, words[:mk[1]]+['<unk>']+marker+['<m_end>']+words[mk[2]:]
 
 	def retrieveTargetMarker(self, brkSentence, targetStyle):
 		# an API wrapper
@@ -87,11 +133,14 @@ class YelpDataset(Dataset):
 	def loadLine(self, sentence, style):
 		# sentence = sentence.split(' ')
 		brkSentence, marker, sentence = self.extractMarker(sentence, style=style)
+		# TODO: assume marker has multi markers and is a list of list
 		# print(sentence)
 		# if self.isTrans:
 		# 	marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
 		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
-		brkSentence, marker = self.word2index([brkSentence, marker])
+		tmp = self.word2index([brkSentence] + marker)
+		brkSentence = tmp[0]
+		marker = tmp[1:]
 		sentence = self.word2index([sentence],sos=True)[0]
 		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
 		if self.isTrans:

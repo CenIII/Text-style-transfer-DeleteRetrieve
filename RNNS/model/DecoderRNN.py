@@ -395,6 +395,7 @@ class DecoderRNN(BaseRNN):
             cur = [0 for i in range(batch_size)] # cursors of brk_sentence
             unk_state = [False for i in range(batch_size)] # states: unk or not unk
             mk_cur = [0 for i in range(batch_size)] # cursors of marker
+            mk_no = [0 for i in range(batch_size)] # num of marker
 
             for di in range(max_length):
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
@@ -417,12 +418,15 @@ class DecoderRNN(BaseRNN):
                     else:# if in "unk" state, use the symbol generated at last time step.
                         decoder_input.append(symbols[b])
                         if self.training:
-                            checkMK = (mk_cur[b]==(inputs_bak[2][b]-1))
+                            checkMK = (mk_cur[b]==(inputs_bak[2][b][mk_no[b]]-1))
                         else:
                             checkMK = symbols[b].data.eq(self.m_end_id)
                         if checkMK:
                             unk_state[b] = False
+                            mk_no[b] += 1
+                            mk_cur[b] = 0
                         mk_cur[b] += 1
+                # print(mk_no)
                 decoder_input = torch.tensor(decoder_input).unsqueeze(1)
                 # decoder_input = symbols
                 if torch.cuda.is_available():
