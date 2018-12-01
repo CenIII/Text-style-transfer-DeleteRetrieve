@@ -189,13 +189,16 @@ class LoaderHandler(object):
 		print('loader handler...')	
 		mode = config['opt'].mode
 		config = config['loader']
+		if mode == 'test':
+			testData = YelpDataset(config,config['testFile'])
+			self.ldTestEval = DataLoader(testData,batch_size=1, shuffle=False, collate_fn=seq_collate)
+			return
 		if mode == 'train':
 			trainData = YelpDataset(config,config['trainFile'])
 			self.ldTrain = DataLoader(trainData,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
-		elif mode == 'val':
-			devData = YelpDataset(config,config['devFile'])
-			self.ldDev = DataLoader(devData,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
-			self.ldDevEval = DataLoader(devData,batch_size=1, shuffle=False, collate_fn=seq_collate)
-		else:
-			testData = YelpDataset(config,config['testFile'])
-			self.ldTestEval = DataLoader(testData,batch_size=1, shuffle=False, collate_fn=seq_collate)
+		# elif mode == 'val':
+		devData = YelpDataset(config,config['devFile'])
+		self.ldDev = DataLoader(devData,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
+		self.ldDevEval = DataLoader(devData,batch_size=1, shuffle=False, collate_fn=seq_collate)
+		# else:
+		
