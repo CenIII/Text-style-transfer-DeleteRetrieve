@@ -360,7 +360,7 @@ class DecoderRNN(BaseRNN):
         sequence_symbols = []
         lengths = np.array([max_length] * batch_size)
 
-        def decode(step, step_output, step_attn, unk_state):
+        def decode(step, step_output, step_attn, unk_state=None):
             decoder_outputs.append(step_output)
             if self.use_attention:
                 ret_dict[DecoderRNN.KEY_ATTN_SCORE].append(step_attn)
@@ -406,7 +406,7 @@ class DecoderRNN(BaseRNN):
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                          function=function)
                 step_output = decoder_output.squeeze(1)
-                symbols = decode(di, step_output, step_attn, unk_state)
+                symbols = decode(di, step_output, step_attn, unk_state=unk_state)
                 decoder_input = []
 
                 # manipulate decoder inputs 
