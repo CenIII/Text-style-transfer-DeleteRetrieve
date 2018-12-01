@@ -111,8 +111,14 @@ class Metrics:
 
     def bleuMetrics(self, preds):
         references = self.loadReferences()
-        score = nltk.translate.bleu_score.corpus_bleu(references, preds['negative'] + preds['positive'])
-        return score
+        hypothesis = preds['positive'] + preds['negative']
+        score = nltk.translate.bleu_score.corpus_bleu(references, preds['positive'] + preds['negative'])
+        score2 = 0
+        for i in range(len(references)):            
+            score2 += nltk.translate.bleu_score.modified_precision(references[i], hypothesis[i], n = 2)
+
+        score2 /= len(references)
+        return float(score2)
        
 
     def loadReferences(self):

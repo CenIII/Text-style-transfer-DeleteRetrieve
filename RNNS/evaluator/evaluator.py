@@ -67,9 +67,9 @@ class Evaluator(object):
 				f.write(sent)
 				brk = 'brk_sentence:'+' '.join(ent[1][0])+'\n'
 				f.write(brk)
-				mk = 'marker:'+' '.join(ent[2][0])+'\n'
-				f.write(mk)
-				pred = [ent[3][i][0][0] for i in range(len(ent[3]))]
+				# mk = 'marker:'+' '.join(ent[2][0])+'\n'
+				# f.write(mk)
+				pred = [ent[2][i][0][0] for i in range(len(ent[2]))]
 				pred = 'pred: '+' '.join(pred)+'\n'
 				f.write(pred)
 				cnt += 1
@@ -90,12 +90,12 @@ class Evaluator(object):
 				outputs = net(inputs)
 
 				brkSent = inputs['brk_sentence']
-				marker = inputs['marker']
+				# marker = inputs['marker']
 				sentence = inputs['sentence']
 				style = inputs['style']
 				pred = outputs[2]['sequence'][:outputs[2]['length'][0]]
 
-				predList.append([sentence,brkSent,marker,pred])
+				predList.append([sentence,brkSent,pred])
 				styleList.append(style)
 		predList_w = self.ind2word(predList)		
 		self.dumpOuts(predList_w)
@@ -107,13 +107,13 @@ class Evaluator(object):
 		tags = ['<unk>', '<m_end>','@@START@@', '@@END@@']
 		for sentence in predList_w:
 			result_sentence = []
-			idx = 0
-			for word in sentence[1][0]:
+			sentence = sum(sum(sentence[2],[]),[])
+			for word in sentence:
 				if word not in tags:
 					result_sentence.append(word)
-				elif (word == '<unk>'):
-					result_sentence += sentence[2][idx]
-					idx += 1
+				# elif (word == '<unk>'):
+				# 	result_sentence += sentence[2][idx]
+				# 	idx += 1
 			results.append(result_sentence)
 		return results
 
@@ -129,7 +129,7 @@ class Evaluator(object):
 		predList_w, styleList = self.predict(ld, net)
 		preds = {"positive":[],"negative":[]}
 		for i in range(len(predList_w)):
-			if styleList[i] == 0:
+			if styleList[i] == 1:
 				key = "positive"
 			else:
 				key = "negative"

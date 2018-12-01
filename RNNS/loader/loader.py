@@ -111,11 +111,15 @@ class YelpDataset(Dataset):
 				mk[1] = None
 
 		for m in mk:
+			cnt = 0
 			if m is not None:
 				brkSent += words[pt:m[1]]+['<unk>']+['<m_end>']
 				marker.append(m[0].split(' '))
 				sentence += words[pt:m[1]]+['<unk>']+marker[-1]+['<m_end>']
 				pt = m[2]
+				cnt += 1
+			if cnt==1:
+				break
 		brkSent += words[pt:]
 		sentence += words[pt:]
 		# print(str(brkSent)+'>>><<<<'+str(marker)+'<<<>>>>'+str(sentence))
