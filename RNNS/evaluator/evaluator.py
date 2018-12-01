@@ -4,11 +4,12 @@ import pickle
 import torch
 import tqdm
 from utils import makeInp, seq_collate
-from Metrics import Metrics
+from metrics import Metrics
+from model import Classifier
 
 class Evaluator(object):
 	"""docstring for Evaluator"""
-	def __init__(self,config,expPath):
+	def __init__(self,config,expPath, config_all):
 		super(Evaluator, self).__init__()
 		print('evaluator...')
 		with open(config['wordDict'],"rb") as fp:
@@ -16,7 +17,8 @@ class Evaluator(object):
 		self.ind2wordDict = self._buildInd2Word(self.wordDict)
 		self.savePath = expPath
 		os.makedirs(self.savePath, exist_ok=True)
-		self.metrics = Metrics
+		classifier_net = Classifier(config_all)
+		self.metrics = Metrics('../exp/classifier', '../../Data/yelp/reference', classifier_net)
 
 	def _buildInd2Word(self,wordDict):
 		vocabs = sorted(self.wordDict.items(), key=lambda x: x[1])
@@ -92,8 +94,8 @@ class Evaluator(object):
 		return predList
 
 	def evaluateMetrics(self, preds):
-		bleu = self.metrics.BLEU(preds)
-		acc = self.metrics.Classify(preds)
+		bleu = self.metrics.bleuMetrics(preds)
+		acc = self.metrics.classifierMetrics(preds)
 		return bleu, acc
 		
 		# evaluate
