@@ -10,8 +10,8 @@ class StyleMarker(object):
 		# self.ind2word = {v:k for k,v in self.wordDict.items()}
 		self.model = None #StructuredSelfAttention()
 		self.reloadModel(checkpoint)
-		if torch.cuda.is_available():
-			self.model = self.model.cuda()
+		# if torch.cuda.is_available():
+		# 	self.model = self.model.cuda()
 		with open('./utils/stopwords','r') as f:
 			lines = f.readlines()
 			self.stopwords = [sw[:-1] for sw in lines]
@@ -59,8 +59,8 @@ class StyleMarker(object):
 	def get_att(self, text):
 		# word dict
 		seq = torch.tensor(self.word2index([text])[0])
-		if torch.cuda.is_available():
-			seq = seq.cuda()
+		# if torch.cuda.is_available():
+		# 	seq = seq.cuda()
 		# pass forward
 		with torch.set_grad_enabled(False):
 			_, att = self.model(seq)

@@ -177,5 +177,5 @@ def main():
     print("[Ctrl+C] Training stopped!")
   loss = evaluate(model, test_iter, optimizer, criterion, args, type='Test')
 
-if __name__ == '__main__':
-  main()
+# if __name__ == '__main__':
+#   main()
