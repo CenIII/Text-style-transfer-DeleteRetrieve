@@ -10,7 +10,7 @@ class YelpDataset(Dataset):
 	POS = 1
 	NEG = 0
 	OppStyle = {POS:NEG,NEG:POS}
-	def __init__(self, config, datafile): #, wordDictFile): #, labeled=True, needLabel=True):
+	def __init__(self, config, datafile,forceNoNoise=False): #, wordDictFile): #, labeled=True, needLabel=True):
 		super(YelpDataset, self).__init__()
 		print('- dataset: '+datafile)
 		# self.data = {self.POS:[], self.NEG:[]}
@@ -24,7 +24,9 @@ class YelpDataset(Dataset):
 		self.sos_id = self.wordDict['@@START@@']
 		self.eos_id = self.wordDict['@@END@@']
 		self.isTrans = config['isTrans']
-		self.useNoise = config['useNoise']
+		self.useNoise = 0 if forceNoNoise else config['useNoise']
+
+
 		self.sm = StyleMarker(config['selfatt'],self.wordDict)
 		# self.sm.get_att(['the', 'service', 'was', 'really', 'good', 'too'])
 		# self.sm.mark(['i', 'had', 'the', 'baja', 'burro', '...', 'it', 'was', 'heaven'])
@@ -136,14 +138,14 @@ class LoaderHandler(object):
 		mode = config['opt'].mode
 		config = config['loader']
 		if mode == 'test':
-			testData = YelpDataset(config,config['testFile'])
+			testData = YelpDataset(config,config['testFile'],forceNoNoise=True)
 			self.ldTestEval = DataLoader(testData,batch_size=1, shuffle=False, collate_fn=seq_collate)
 			return
 		if mode == 'train':
 			trainData = YelpDataset(config,config['trainFile'])
 			self.ldTrain = DataLoader(trainData,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
 		# elif mode == 'val':
-		devData = YelpDataset(config,config['devFile'])
+		devData = YelpDataset(config,config['devFile'],forceNoNoise=True)
 		self.ldDev = DataLoader(devData,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
 		self.ldDevEval = DataLoader(devData,batch_size=1, shuffle=False, collate_fn=seq_collate)
 		# else:
