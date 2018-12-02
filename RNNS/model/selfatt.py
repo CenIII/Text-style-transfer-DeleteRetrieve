@@ -96,9 +96,9 @@ class StructuredSelfAttention(torch.nn.Module):
     def init_hidden(self):
         x = Variable(torch.zeros(1,self.batch_size,self.lstm_hid_dim))
         y = Variable(torch.zeros(1,self.batch_size,self.lstm_hid_dim))
-        if torch.cuda.is_available():
-            x = x.cuda()
-            y = y.cuda()
+#        if torch.cuda.is_available():
+ #           x = x.cuda()
+  #          y = y.cuda()
         return (x,y)
        
         
