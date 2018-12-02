@@ -10,6 +10,8 @@ class StyleMarker(object):
 		# self.ind2word = {v:k for k,v in self.wordDict.items()}
 		self.model = None #StructuredSelfAttention()
 		self.reloadModel(checkpoint)
+		if torch.cuda.is_available():
+			self.model = self.model.cuda()
 		with open('./utils/stopwords','r') as f:
 			lines = f.readlines()
 			self.stopwords = [sw[:-1] for sw in lines]
