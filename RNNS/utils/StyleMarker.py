@@ -63,7 +63,7 @@ class StyleMarker(object):
 		# 	seq = seq.cuda()
 		# pass forward
 		with torch.set_grad_enabled(False):
-			_, att = self.model(seq)
+			_, att = self.model(seq.detach())
 		# get att
 		return att
 
