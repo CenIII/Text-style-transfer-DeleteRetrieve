@@ -47,8 +47,12 @@ print(len(vocabs))
 
 wordDict = {}
 word2vec = []
-cnt=0
+
 wastewords = []
+word2vec.append(np.zeros(300))
+wordDict['<PAD>']=0
+
+cnt=1
 for word in vocabs:
 	if word in model.wv:
 		word2vec.append(model.wv[word])

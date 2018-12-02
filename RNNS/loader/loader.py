@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 import pickle
-from utils import subset, seq_collate
+from utils import subset, seq_collate, StyleMarker
 import numpy as np 
 
 class YelpDataset(Dataset):
@@ -24,6 +24,11 @@ class YelpDataset(Dataset):
 		self.sos_id = self.wordDict['@@START@@']
 		self.eos_id = self.wordDict['@@END@@']
 		self.isTrans = config['isTrans']
+		self.useNoise = config['useNoise']
+		self.sm = StyleMarker(config['selfatt'],self.wordDict)
+		# self.sm.get_att(['the', 'service', 'was', 'really', 'good', 'too'])
+		# self.sm.mark(['i', 'had', 'the', 'baja', 'burro', '...', 'it', 'was', 'heaven'])
+		pass
 
 	def isValidSentence(self,sentence):
 		if(sentence == [] or 
@@ -54,116 +59,57 @@ class YelpDataset(Dataset):
 
 	def __getitem__(self, idx):
 		style, sentence = self.data[idx]
-		# print('style: '+str(style)+' sentence:'+str(sentence))
 		return self.loadLine(sentence, style)
 
-	def extractMarker(self, sentence, style):
-		maxc = np.array([-float('inf'),-float('inf')])
-		words = sentence
-		cnt = 0
-		mk = [None, None]
-		cur = 0
+	def applyNoise(self, ptList,sentLen):
+		curList = sum([[l,r] for (l,r) in ptList],[])
+		newList = []
+		for (l,r) in ptList:
+			if np.random.uniform(0,1,1)<0.1:
+				if np.random.uniform(0,1,1)<0.5:
+					newl = max([0,l-1])
+					if newl in curList:
+						newl = l
+					newList.append((newl,r))
+				else:
+					newr = min([sentLen,r+1])
+					if newr in curList:
+						newr = r
+					newList.append((l,newr))
+			else:
+				newList.append((l,r))
+		return newList
 
-		def rg():
-			g = []
-			for m in mk:
-				if m is not None:
-					g += list(range(m[1],m[2]))
-			return g
-
-		if style == self.POS:
-			style_count = self.pos_style_dict
-		elif style == self.NEG:
-			style_count = self.neg_style_dict
-		for n in range(1, 3):
-			for l in range(0, len(words)-n+1):
-				tmp = ' '.join(words[l:l+n])
-				score = style_count.get(tmp, 0)
-				if score > min(maxc):
-					g = rg()
-					if l in g or l+n-1 in g:
-						continue
-					# print(score)
-					maxc[np.argmin(maxc)] = score
-					mk[cur] = (tmp, l ,l+n, score)
-					cur = (cur+1)%2
-					cnt += 1
-		if cnt==0:
-			print(sentence)
-
-		if None not in mk:
-			ind = 0 if mk[0][3]<mk[1][3] else 1
-			if len(words)==2 or mk[ind][3]<10:
-				mk[ind] = None
-
+	def extractMarker(self, sentence):
+		ptList = self.sm.mark(sentence)
+		if self.useNoise:
+			ptList = self.applyNoise(ptList,len(sentence))
 		brkSent = []
-		pt = 0
 		marker = []
-		sentence = []
-		if None not in mk:
-			if mk[0][1] > mk[1][1]:
-				tmp = mk[0]
-				mk[0] = mk[1]
-				mk[1] = tmp
-
-			if mk[0][2] == mk[1][1]:
-				mk[0] = (mk[0][0]+' '+mk[1][0],mk[0][1],mk[1][2])
-				mk[1] = None
-
-		for m in mk:
-			if m is not None:
-				brkSent += words[pt:m[1]]+['<unk>']+['<m_end>']
-				marker.append(m[0].split(' '))
-				sentence += words[pt:m[1]]+['<unk>']+marker[-1]+['<m_end>']
-				pt = m[2]
-
-		brkSent += words[pt:]
-		sentence += words[pt:]
-		# print(str(brkSent)+'>>><<<<'+str(marker)+'<<<>>>>'+str(sentence))
-
-		# marker = mk[0].split(' ')
-		# marker = self.applyNoise(marker, style_count)
-		return brkSent, marker, sentence #words[:mk[1]]+['<unk>']+['<m_end>']+words[mk[2]:], marker, words[:mk[1]]+['<unk>']+marker+['<m_end>']+words[mk[2]:]
-
-	def retrieveTargetMarker(self, brkSentence, targetStyle):
-		# an API wrapper
-		# whether we need deleted marker for this task or not is debatable
-		pass
-	# 	return targetMarker
+		fullSent = []
+		pt = 0
+		for (l,r) in ptList:
+			brkSent += sentence[pt:l]+['<unk>']+['<m_end>']
+			marker.append(sentence[l:r])
+			fullSent += sentence[pt:l]+['<unk>']+marker[-1]+['<m_end>']
+			pt = r
+		brkSent += sentence[pt:]
+		fullSent += sentence[pt:]
+		# print(str(brkSent)+'>>><<<<'+str(marker)+'<<<>>>>'+str(fullSent))
+		return brkSent, marker, fullSent
 
 	def loadLine(self, sentence, style):
-		# sentence = sentence.split(' ')
-		brkSentence, marker, sentence = self.extractMarker(sentence, style=style)
-		# TODO: assume marker has multi markers and is a list of list
 		# print(sentence)
-		# if self.isTrans:
-		# 	marker = self.retrieveTargetMarker(brkSentence, targetStyle=self.OppStyle[style])
-		# print('brkSentence: '+str(brkSentence)+' marker: '+str(marker))
+		brkSentence, marker, sentence = self.extractMarker(sentence)
+
 		tmp = self.word2index([brkSentence] + marker)
 		brkSentence = tmp[0]
 		marker = tmp[1:]
 		sentence = self.word2index([sentence],sos=True)[0]
-		# targetMarker = self.retrieveTargetMarker(brkSentence, targetStyle=OppStyle[style])
+		
 		if self.isTrans:
 			style = self.OppStyle[style]
 		return (brkSentence, [style], sentence, marker) #targetMarker
-
-	def applyNoise(self, marker, style_count):
-		if len(marker) <= 1:
-			return marker
-		if np.random.uniform(0,1,1)<0.1:
-			# print(marker)
-			minScore = float('inf')
-			cur = None
-			# for loop marker
-			for i in range(len(marker)):
-				sc = style_count.get(marker[i], 0)
-				if  sc < minScore:
-					minScore = sc
-					cur = i
-			del marker[i]	
-			# print(marker)
-		return marker
 
 	def word2index(self, sList, sos=False):
 		resList = []

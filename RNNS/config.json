@@ -8,7 +8,10 @@
     "negStyleDict": "../AuxData/neg_style_count",
     "trainFile": "../Data/yelp/sentiment.train",
     "devFile": "../Data/yelp/sentiment.dev",
-    "testFile": "../Data/yelp/sentiment.test"
+    "testFile": "../Data/yelp/sentiment.test",
+    "selfatt": "../AuxData/selfatt.pt",
+    "useNoise": 0
+
   },
   "trainer":{
     "lr": 1e-4
