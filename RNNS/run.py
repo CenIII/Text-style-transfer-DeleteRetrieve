@@ -1,8 +1,8 @@
 import torch
 from loader import LoaderHandler
 from evaluator import Evaluator
-from trainer import Trainer
-from model import Seq2seq, Criterion
+from trainer import Trainer, LangTrainer
+from model import Seq2seq, Criterion, languageModel
 from utils import ConfigParser, utils
 import fileinput
 
@@ -66,12 +66,22 @@ def runOnline(config):
 		pred = evaluator.predictLine(loader.ldDevEval, net, line, style)
 		print(pred)
 
+def runPreTrain(config):
+	loader = LoaderHandler(config)
+	# TODO: modify config.json 
+	net = languageModel(**config['lang_model'])
+	if torch.cuda.is_available():
+		net = net.cuda()
+	lang_trainer = LangTrainer(config['trainer'],config['LmPath'])
+	# TODO: fill in the parameters
+	lang_trainer.train(loader, net,config)
 
 def main():
 	config = ConfigParser.parse_config()
 	mode = config['opt'].mode
 	if mode == 'train':
-		runTrain(config)
+		# runTrain(config)
+		runPreTrain(config)
 	elif mode == 'val':
 		runVal(config)
 	elif mode == 'test':
