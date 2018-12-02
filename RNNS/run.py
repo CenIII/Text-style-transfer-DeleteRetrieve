@@ -28,11 +28,13 @@ import fileinput
 
 def runTrain(config):
 	loader = LoaderHandler(config)
-	net = Seq2seq(**config['model'])
+	net = Seq2seq(**config['model']) # use **kwargs to unpack dict as parameters
 	if config['opt'].continue_exp:
+		# Load the model checkpoint specified by continue_exp
 		net = utils.reloadModel(net, config)
 	crit = Criterion(config['crit'])
 	if torch.cuda.is_available():
+		# Move all the parameters to CUDA
 		net = net.cuda()
 		crit = crit.cuda()
 	trainer = Trainer(config['trainer'],config['expPath'])

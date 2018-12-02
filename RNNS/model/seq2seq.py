@@ -6,6 +6,8 @@ from .DecoderRNN import DecoderRNN
 import pickle
 import numpy as np
 
+# To learn more about nn.Module, see https://pytorch.org/docs/stable/nn.html?highlight=nn%20module#module-torch.nn
+
 class Seq2seq(nn.Module):
 	""" Standard sequence-to-sequence architecture with configurable encoder
 	and decoder.
@@ -41,6 +43,7 @@ class Seq2seq(nn.Module):
 	def __init__(self, embedding=None, wordDict=None, hidden_size=300, style_size=100, input_dropout_p=0, max_len=100, dropout_p=0, n_layers=1, bidirectional=False, rnn_cell='gru', decode_function=F.log_softmax):
 		super(Seq2seq, self).__init__()
 		print('net...')
+		# Load the embedding vector for all the words
 		if embedding==None:
 			print('no embedding given. please try again')
 			exit(0)
@@ -55,20 +58,27 @@ class Seq2seq(nn.Module):
 		self.encoder = EncoderRNN(vocab_size, max_len, hidden_size, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
 				embedding=embedding, update_embedding=False)
-		self.style_emb = nn.Embedding(2,style_size)
+		
+		self.style_emb = nn.Embedding(2,style_size) # The embedding for style is generated randomly, and will also be trained.
 		self.decoder = DecoderRNN(vocab_size, max_len, int((hidden_size+style_size)*(bidirectional+1)), sos_id, eos_id, unk_id, m_end_id, n_layers=n_layers, rnn_cell=rnn_cell, bidirectional=bidirectional, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, use_attention=False, embedding=embedding, update_embedding=False)
 		self.decode_function = decode_function
 
 	def flatten_parameters(self):
+		# TODO: check
 		self.encoder.rnn.flatten_parameters()
 		self.decoder.rnn.flatten_parameters()
 
 	def forward(self, inputs, target_variable=None,
 				teacher_forcing_ratio=0):
+		# Use teacher forcing on decoder, only at training stage. The ratio will be modified during training.
 		tf_ratio = teacher_forcing_ratio if self.training else 0
+
+		# encoder_output: torch.Size([seq_len, batch, num_directions * hidden_size])
+		# encoder_hidden: torch.Size([direction * layers, batch, hidden_size])
 		encoder_outputs, encoder_hidden = self.encoder(inputs['brk_sentence'], inputs['bs_inp_lengths'])
 		style_embedding = self.style_emb(inputs['style'])
+
 		result = self.decoder(inputs=[inputs['sentence'],inputs['brk_sentence'],inputs['mk_inp_lengths']],#target_variable,
 							  style_embd=style_embedding,
 							  encoder_hidden=encoder_hidden, #encoder_hidden0,
@@ -81,7 +91,16 @@ class Seq2seq(nn.Module):
 
 
 class Criterion(nn.Module):
-	"""docstring for Criterion"""
+	"""Calculate loss based on both input sequences and outputs of decoder.
+	
+	Attributes:
+	 	TODO: The function followed should be used in forward().
+		LanguageModelLoss(): Calculate crossentropy loss with only the outputs, using two pre-trained language models.
+			The transferd style of the sample will be used to choose which language model to use.
+		ReconstructLoss(): Calculate reconstruction loss of output without tranfering style.
+
+
+	"""
 	def __init__(self, config):
 		super(Criterion, self).__init__()
 		print('crit...')
