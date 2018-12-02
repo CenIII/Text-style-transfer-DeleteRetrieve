@@ -10,7 +10,7 @@
     "devFile": "../Data/yelp/sentiment.dev",
     "testFile": "../Data/yelp/sentiment.test",
     "selfatt": "../AuxData/selfatt.pt",
-    "useNoise": 0
+    "useNoise": 1
 
   },
   "trainer":{
