@@ -30,6 +30,6 @@
   },
   "metric":{
     "ref_file": "../Data/yelp/reference",
-    "classifier_weight_path": "./exp/classifier"
+    "classifier_weight_path": "./exp"
   }
 }

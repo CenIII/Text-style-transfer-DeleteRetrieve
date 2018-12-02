@@ -59,15 +59,15 @@ def runVal(config):
 		net = net.cuda()
 	metric = Metrics('exp/pose', '../../Data/yelp/reference',net)
 	preds = {'positive':[],'negative':[]}
-	with open('../../Data/yelp/sentiment.test.0','r') as f:
+	with open('../../Data/yelp/sentiment.dev.0','r') as f:
 		loadData(f.readlines(), 0)
-	with open('../../Data/yelp/sentiment.test.1','r') as f:
+	with open('../../Data/yelp/sentiment.dev.1','r') as f:
 		loadData(f.readlines(), 1)
 	acc = metric.classifierMetrics(preds)
 	print(acc)
 
-	score = metric.bleuMetrics(preds)
-	print(score)
+	# score = metric.bleuMetrics(preds)
+	# print(score)
 
 def extractClassifierMarker(config):
 	def isValidSentence(sentence):

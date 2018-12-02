@@ -16,8 +16,8 @@ class Metrics:
 
     def reloadClassifierModel(self, model, model_path):
 
-        print("=> Reloading checkpoint '{}': model".format(model_path + '/bestmodel.pth.tar'))
-        checkpoint = torch.load(model_path + '/bestmodel.pth.tar')
+        print("=> Reloading checkpoint '{}': model".format(model_path + '/selfatt.pt'))
+        checkpoint = torch.load(model_path + '/selfatt.pt')
         # model.load_state_dict(self.checkpoint['state_dict'])
         model_dict = model.state_dict()
         # 1. filter out unnecessary keys

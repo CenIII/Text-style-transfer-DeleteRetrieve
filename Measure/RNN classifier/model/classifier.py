@@ -62,7 +62,7 @@ class Classifier(nn.Module):
 
 	def flatten_parameters(self):
 		self.encoder.rnn.flatten_parameters()
-		self.decoder.rnn.flatten_parameters()
+		self.decoder.rattentionnn.flatten_parameters()
 
 	def forward(self, inputs):
 		outputs, hidden = self.encoder(inputs['sentence'],inputs['st_inp_lengths'])

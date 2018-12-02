@@ -34,6 +34,7 @@ class Metrics:
         net = self.reloadClassifierModel(self.net, self.model_path)
         correct = 0
         total = len(preds['positive']) + len(preds['negative'])
+
         def test(net, label):
             correct = 0
             if label == 0:
@@ -48,6 +49,8 @@ class Metrics:
                     output_label = 1
                 if output_label == label:
                     correct += 1
+                else:
+                    print(" ".join(sentence), output[0][0])
             return correct
         correct += test(net, 0)
         correct += test(net, 1)

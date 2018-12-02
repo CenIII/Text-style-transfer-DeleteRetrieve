@@ -5,23 +5,21 @@ import torch
 import tqdm
 from utils import makeInp, seq_collate
 from .metrics import Metrics
-from model import Classifier
+from model import StructuredSelfAttention
 
 class Evaluator(object):
 	"""docstring for Evaluator"""
 	def __init__(self,config,expPath, config_all):
 		super(Evaluator, self).__init__()
 		print('evaluator...')
-		with open(config['wordDict'],"rb") as fp:
+		with open(config["wordDict"],"rb") as fp:
 			self.wordDict = pickle.load(fp)
 		self.ind2wordDict = self._buildInd2Word(self.wordDict)
 		self.savePath = expPath
 		os.makedirs(self.savePath, exist_ok=True)
 
-		config_all["model"]["bidirectional"] = 0
-		classifier_net = Classifier(**config_all["model"])
-		
-		self.metrics = Metrics(config_all["metric"]["classifier_weight_path"], config_all["metric"]["ref_file"], classifier_net, config_all["model"]["wordDict"])
+		attention_model = StructuredSelfAttention(batch_size=1,lstm_hid_dim=100,d_a = 100,r=2,vocab_size=len(word_to_id),max_len=25,type=0,n_classes=1,use_pretrained_embeddings=False,embeddings=None)		
+		self.metrics = Metrics(config_all["metric"]["classifier_weight_path"], config_all["metric"]["ref_file"], attention_model,"../AuxData/wordDict_classifier" )
 		self.mode = config_all['opt'].mode
 
 	def _buildInd2Word(self,wordDict):
