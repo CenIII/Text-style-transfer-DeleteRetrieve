@@ -1,0 +1,31 @@
+{
+  "expPath": "./exp",
+  "loader": {
+    "batchSize": 256,
+    "isTrans": 0,
+    "wordDict": "../../AuxData/wordDict",
+    "posStyleDict": "../../AuxData/pos_style_count",
+    "negStyleDict": "../../AuxData/neg_style_count",
+    "trainFile": "../../Data/yelp/sentiment.train",
+    "devFile": "../../Data/yelp/sentiment.dev",
+    "testFile": "../../Data/yelp/sentiment.test"
+  },
+  "trainer":{
+    "lr": 5e-3,
+    "maxEpoch":5
+  },
+  "model":{
+    "embedding": "../../AuxData/word2vec.npy", 
+    "wordDict": "../../AuxData/wordDict",
+    "hidden_size": 512, 
+    "input_dropout_p": 0, 
+    "dropout_p": 0, 
+    "n_layers": 1, 
+    "bidirectional":1, 
+    "rnn_cell": "gru"
+  },
+  "crit": 0,
+  "evaluator":{
+    "wordDict": "../../AuxData/wordDict"
+  }
+}
