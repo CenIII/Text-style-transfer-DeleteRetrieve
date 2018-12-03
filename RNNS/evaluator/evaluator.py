@@ -87,8 +87,8 @@ class Evaluator(object):
 									ascii=True)
 			for itr in qdar:
 				inputs = makeInp(next(ld))
-				outputs = net(inputs)
-
+				outputs = net(inputs) # Result1, Result2
+				outputs = outputs[0]
 				brkSent = inputs['brk_sentence']
 				# marker = inputs['marker']
 				sentence = inputs['sentence']

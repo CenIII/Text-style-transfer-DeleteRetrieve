@@ -117,7 +117,7 @@ class Criterion(nn.Module):
 
 
 	def LanguageModelLoss(self,sentence_input,length,style):
-		print(sentence_input.shape[1],length)
+		# print(sentence_input.shape[1],length)
 		# assert sentence.shape[1]==length
 		sentence = sentence_input[:,:length]
 		labels = torch.cat([sentence,torch.zeros(1).view(1,1).type(torch.int64)],dim=1)

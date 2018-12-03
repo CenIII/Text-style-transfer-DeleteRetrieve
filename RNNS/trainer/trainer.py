@@ -173,6 +173,7 @@ class LangTrainer(object):
 		# train
 		minLoss = float('inf')
 		epoch = config['opt'].epoch
+
 		while epoch<10:
 			print('epoch: '+str(epoch))
 			net.train()
@@ -194,11 +195,12 @@ class LangTrainer(object):
 					# import pdb;pdb.set_trace()
 					labels = getLabel(inputs['sentence'])
 					# labels.detach_()
-					import pdb;pdb.set_trace()
+					# import pdb;pdb.set_trace()
 					outputs = net(inputs['sentence'],inputs['st_inp_lengths'])
 					# import pdb;pdb.set_trace()
 					loss = self.celoss(outputs.view(-1,outputs.shape[2]),labels.view(-1))
-					loss = loss/torch.sum(inputs['st_inp_lengths'])
+					import pdb;pdb.set_trace()
+					loss = loss/torch.sum(inputs['st_inp_lengths']).type(loss.dtype)
 				self.optimizer.zero_grad()
 				loss.backward()
 				self.optimizer.step()

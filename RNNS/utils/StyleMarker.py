@@ -67,7 +67,7 @@ class StyleMarker(object):
 		# get att
 		return att
 
-	def mark(self,text,hoplen=1,thr=0.5):
+	def mark(self,text,hoplen=3,thr=0.3):
 		atts = self.get_att(text)[0]
 		# ret point list
 		seqlen = len(atts[0])
