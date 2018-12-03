@@ -91,7 +91,7 @@ class LangTrainer(object):
 	def __init__(self, config, savePath):
 		super(LangTrainer, self).__init__()
 		print('LM trainer...')
-		self.lr = config['lr']
+		self.lr = config['lm_lr']
 		self.savePath = savePath
 		os.makedirs(self.savePath, exist_ok=True)
 		self.celoss = torch.nn.CrossEntropyLoss()
