@@ -197,7 +197,7 @@ class LangTrainer(object):
 					outputs = net(inputs['sentence'],inputs['st_inp_lengths'])
 
 					loss = self.celoss(outputs.view(-1,outputs.shape[2]),labels.view(-1))
-					loss = loss/torch.sum(inputs['st_inp_lengths']).type(loss.dtype)
+					# loss = loss/torch.sum(inputs['st_inp_lengths']).type(loss.dtype)
 				self.optimizer.zero_grad()
 				loss.backward()
 				self.optimizer.step()
