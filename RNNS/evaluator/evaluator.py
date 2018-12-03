@@ -19,7 +19,7 @@ class Evaluator(object):
 		os.makedirs(self.savePath, exist_ok=True)
 		with open("../AuxData/wordDict_classifier","rb") as fp:
 			word_to_id = pickle.load(fp)
-		attention_model = StructuredSelfAttention(batch_size=1,lstm_hid_dim=100,d_a = 100,r=2,vocab_size=len(word_to_id),max_len=25,type=0,n_classes=1,use_pretrained_embeddings=False,embeddings=None)		
+		attention_model = StructuredSelfAttention_test(batch_size=1,lstm_hid_dim=100,d_a = 100,r=2,vocab_size=len(word_to_id),max_len=25,type=0,n_classes=1,use_pretrained_embeddings=False,embeddings=None)		
 		self.metrics = Metrics(config_all["metric"]["classifier_weight_path"], config_all["metric"]["ref_file"], attention_model,"../AuxData/wordDict_classifier" )
 		self.mode = config_all['opt'].mode
 

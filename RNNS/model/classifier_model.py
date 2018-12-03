@@ -33,7 +33,7 @@ class StructuredSelfAttention_test(torch.nn.Module):
         Raises:
             Exception
         """
-        super(StructuredSelfAttention,self).__init__()
+        super(StructuredSelfAttention_test,self).__init__()
        
         self.embeddings,emb_dim = self._load_embeddings(use_pretrained_embeddings,embeddings,vocab_size,emb_dim)
         self.lstm = torch.nn.LSTM(emb_dim,lstm_hid_dim,1,batch_first=True)
