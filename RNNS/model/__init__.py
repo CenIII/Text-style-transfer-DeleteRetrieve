@@ -1,2 +1,3 @@
 from .seq2seq import Seq2seq, Criterion
-from .classifier_model import StructuredSelfAttention
+from .selfatt import StructuredSelfAttention
+from .classifier import Classifier
