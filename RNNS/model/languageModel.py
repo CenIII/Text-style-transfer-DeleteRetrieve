@@ -28,8 +28,8 @@ class languageModel(nn.Module):
 		self.encoder.rnn.flatten_parameters()
 		self.decoder.rnn.flatten_parameters()
 
-	def forward(self, inputs):
-		result, _ = self.lm_model(inputs['sentence'], inputs['st_inp_lengths']) # torch.Size([batch_size,seq_len,vocab_size])
+	def forward(self, sentence, sen_length):
+		result, _ = self.lm_model(sentence, sen_length) # torch.Size([batch_size,seq_len,vocab_size])
 		return result
 
 		

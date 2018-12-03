@@ -68,6 +68,7 @@ class Trainer(object):
 				inputs = makeInp(next(ld))
 				with torch.set_grad_enabled(True):
 					outputs = net(inputs, teacher_forcing_ratio=max((1-epoch/10),0))
+					# import pdb;pdb.set_trace()
 					loss = crit(outputs,inputs)
 				self.optimizer.zero_grad()
 				loss.backward()
@@ -178,11 +179,12 @@ class LangTrainer(object):
 									ascii=True)
 			for itr in qdar: 
 				inputs = makeInp(next(ld))
+				import pdb;pdb.set_trace()
 				with torch.set_grad_enabled(True):
 					# import pdb;pdb.set_trace()
 					labels = getLabel(inputs['sentence'])
 					# labels.detach_()
-					outputs = net(inputs)
+					outputs = net(inputs['sentence'],inputs['st_inp_lengths'])
 					# import pdb;pdb.set_trace()
 					loss = self.celoss(outputs.view(-1,outputs.shape[2]),labels.view(-1))
 				self.optimizer.zero_grad()

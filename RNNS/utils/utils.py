@@ -68,6 +68,27 @@ def reloadModel(model,config):
 	model.load_state_dict(model_dict)
 	return model
 
+def reloadLM(model=None,config=None,style=None):
+	checkpoint = os.path.join(config['neg_model']+'.pth.tar' if style==0 else config['pos_model']+'.pth.tar')
+	print("=> Reloading checkpoint '{}': model".format(checkpoint))
+
+	checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
+	model_dict = model.state_dict()
+	# 1. filter out unnecessary keys
+	pretrained_dict = {}
+	for k, v in checkpoint['state_dict'].items():
+		if(k in model_dict):
+			pretrained_dict[k] = v
+	# 2. overwrite entries in the existing state dict
+	model_dict.update(pretrained_dict)
+	# 3. load the new state dict
+	model.load_state_dict(model_dict)
+	
+	# Freeze model
+	for param in model.parameters():
+		param.requires_grad = False
+	return model
+
 def makeInp(inputs):
 	if torch.cuda.is_available():
 		for key in inputs:

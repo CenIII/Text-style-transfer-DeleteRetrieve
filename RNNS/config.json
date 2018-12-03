@@ -1,8 +1,8 @@
 {
   "expPath": "./exp",
   "LmPath":"./langModel",
-  "pos_model": "../AuxData/pos_model.pt",
-  "neg_model": "../AuxData/neg_model.pt",
+  "pos_model": "../AuxData/lm_bestmodel_pos",
+  "neg_model": "../AuxData/lm_bestmodel_neg",
   "loader": {
     "batchSize": 64,
     "isTrans": 0,
@@ -31,7 +31,9 @@
     "bidirectional":1, 
     "rnn_cell": "gru"
   },
-  "crit": 0,
+  "crit": {
+    "use_lang_model": 0
+  },
   "evaluator":{
     "wordDict": "../AuxData/wordDict"
   },

@@ -31,7 +31,8 @@ def runTrain(config):
 	net = Seq2seq(**config['model'])
 	if config['opt'].continue_exp:
 		net = utils.reloadModel(net, config)
-	crit = Criterion(config['crit'])
+	crit = Criterion(config)
+	crit.load_crit(config)
 	if torch.cuda.is_available():
 		net = net.cuda()
 		crit = crit.cuda()
@@ -67,6 +68,7 @@ def runOnline(config):
 		print(pred)
 
 def runPreTrain(config):
+	# utils.reloadLM(config=config)
 	loader = LoaderHandler(config)
 	# TODO: modify config.json 
 	lm_pos = languageModel(**config['lang_model'])
