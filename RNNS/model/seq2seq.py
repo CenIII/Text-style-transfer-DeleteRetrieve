@@ -120,10 +120,16 @@ class Criterion(nn.Module):
 		# print(sentence_input.shape[1],length)
 		# assert sentence.shape[1]==length
 		sentence = sentence_input[:,:length]
-		labels = torch.cat([sentence,torch.zeros(1).view(1,1).type(torch.int64)],dim=1)
-		# import pdb;pdb.set_trace()
 		sid = self.wordDict['@@START@@']
-		sentence = torch.cat([torch.tensor(sid).view(1,1),sentence],dim=1) # add <sos>
+
+		if torch.cuda.is_available():
+			labels = torch.cat([sentence,torch.zeros(1).view(1,1).type(torch.int64).cuda()],dim=1)
+			sentence = torch.cat([torch.tensor(sid).view(1,1).cuda(),sentence],dim=1) # add <sos>
+		else: 
+			labels = torch.cat([sentence,torch.zeros(1).view(1,1).type(torch.int64)],dim=1)
+			sentence = torch.cat([torch.tensor(sid).view(1,1),sentence],dim=1) # add <sos>
+		
+		
 		length = length+1
 		# import pdb;pdb.set_trace()
 		if style == 1:
