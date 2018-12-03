@@ -4,7 +4,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.utils.data as data_utils
  
-class StructuredSelfAttention(torch.nn.Module):
+class StructuredSelfAttention_test(torch.nn.Module):
     """
     The class is an implementation of the paper A Structured Self-Attentive Sentence Embedding including regularization
     and without pruning. Slight modifications have been done for speedup

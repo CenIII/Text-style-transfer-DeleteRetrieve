@@ -5,7 +5,7 @@ import torch
 import tqdm
 from utils import makeInp, seq_collate
 from .metrics import Metrics
-from model import StructuredSelfAttention
+from model import StructuredSelfAttention_test
 
 class Evaluator(object):
 	"""docstring for Evaluator"""
