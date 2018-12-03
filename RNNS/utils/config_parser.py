@@ -6,7 +6,7 @@ class ConfigParser:
 
 	def _create_command_line_parser():
 		parser = argparse.ArgumentParser()
-		parser.add_argument('-m', '--mode', type=str, choices=['train','val','test','online'], default='train', help='running mode: [train | val | test]' )
+		parser.add_argument('-m', '--mode', type=str, choices=['train','val','test','online','pretrain'], default='train', help='running mode: [train | val | test]' )
 		parser.add_argument('-c', '--continue_exp', type=str, help='continue exp')
 		parser.add_argument('-e', '--exp', type=str, default='pose', help='experiments name: [anystring]')
 		# parser.add_argument('-v', '--evaluate', action='store_true', help='load predicted results')

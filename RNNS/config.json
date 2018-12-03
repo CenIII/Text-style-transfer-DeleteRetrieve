@@ -1,6 +1,8 @@
 {
   "expPath": "./exp",
   "LmPath":"./langModel",
+  "pos_model": "../AuxData/pos_model.pt",
+  "neg_model": "../AuxData/neg_model.pt",
   "loader": {
     "batchSize": 64,
     "isTrans": 0,

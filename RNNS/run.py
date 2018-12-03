@@ -69,18 +69,23 @@ def runOnline(config):
 def runPreTrain(config):
 	loader = LoaderHandler(config)
 	# TODO: modify config.json 
-	net = languageModel(**config['lang_model'])
+	lm_pos = languageModel(**config['lang_model'])
+	lm_neg = languageModel(**config['lang_model'])
 	if torch.cuda.is_available():
-		net = net.cuda()
+		lm_pos = lm_pos.cuda()
+		lm_neg = lm_neg.cuda()
+
 	lang_trainer = LangTrainer(config['trainer'],config['LmPath'])
 	# TODO: fill in the parameters
-	lang_trainer.train(loader, net,config)
+	lang_trainer.train(loader,lm_pos,config,isStyle=1)
+	lang_trainer.train(loader,lm_neg,config,isStyle=0)
 
 def main():
 	config = ConfigParser.parse_config()
 	mode = config['opt'].mode
 	if mode == 'train':
-		# runTrain(config)
+		runTrain(config)
+	elif mode =='pretrain':
 		runPreTrain(config)
 	elif mode == 'val':
 		runVal(config)

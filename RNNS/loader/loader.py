@@ -10,11 +10,11 @@ class YelpDataset(Dataset):
 	POS = 1
 	NEG = 0
 	OppStyle = {POS:NEG,NEG:POS}
-	def __init__(self, config, datafile,forceNoNoise=False): #, wordDictFile): #, labeled=True, needLabel=True):
+	def __init__(self, config, datafile,forceNoNoise=False,hasStyle=None): #, wordDictFile): #, labeled=True, needLabel=True):
 		super(YelpDataset, self).__init__()
 		print('- dataset: '+datafile)
 		# self.data = {self.POS:[], self.NEG:[]}
-		self.data = self.readData(datafile)
+		self.data = self.readData(datafile,hasStyle=None)
 		with open(config['posStyleDict'], "rb") as fp:   #Pickling
 			self.pos_style_dict =  pickle.load(fp)
 		with open(config['negStyleDict'], "rb") as fp:   #Pickling
@@ -39,7 +39,7 @@ class YelpDataset(Dataset):
 			return False
 		return True
 
-	def readData(self,datafile):
+	def readData(self,datafile,hasStyle=None):
 		data = [] #{self.POS:[], self.NEG:[]}
 		# proc .0 file (negative)
 		def subread(postfix,style):
@@ -52,8 +52,11 @@ class YelpDataset(Dataset):
 						data.append((style, sentence))
 					line = f.readline()
 					# i += 1
-		subread('.0',self.NEG)
-		subread('.1',self.POS)
+		if hasStyle:
+			subread('.'+str(hasStyle),int(hasStyle))
+		else:
+			subread('.0',self.NEG)
+			subread('.1',self.POS)
 		return data
 
 	def __len__(self):
@@ -144,6 +147,15 @@ class LoaderHandler(object):
 		if mode == 'train':
 			trainData = YelpDataset(config,config['trainFile'])
 			self.ldTrain = DataLoader(trainData,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
+		if mode == "pretrain":
+			trainData_pos = YelpDataset(config,config['trainFile'],hasStyle=1)
+			self.ldTrain_pos = DataLoader(trainData_pos,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
+			trainData_neg = YelpDataset(config,config['trainFile'],hasStyle=0)
+			self.ldTrain_neg = DataLoader(trainData_neg,batch_size=config['batchSize'], shuffle=True, num_workers=2, collate_fn=seq_collate)
+			devData_pos = YelpDataset(config,config['devFile'],forceNoNoise=True)
+			self.ldDev_pos = DataLoader(devData_pos,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
+			devData_neg = YelpDataset(config,config['devFile'],forceNoNoise=True)
+			self.ldDev_neg = DataLoader(devData_neg,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)
 		# elif mode == 'val':
 		devData = YelpDataset(config,config['devFile'],forceNoNoise=True)
 		self.ldDev = DataLoader(devData,batch_size=config['batchSize'], shuffle=False, num_workers=2, collate_fn=seq_collate)

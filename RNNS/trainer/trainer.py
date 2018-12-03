@@ -102,7 +102,9 @@ class LangTrainer(object):
 		for param_group in optimizer.param_groups:
 			param_group['lr'] = lr
 
-	def devLoss(self, ld, net, crit):
+	def devLoss(self, ld, net):
+		def getLabel(x):
+			return torch.cat((x[:,1:],torch.zeros_like(x)[:,0:1]),1)
 		net.eval()
 		ld = iter(ld)
 		numIters = len(ld)
@@ -113,16 +115,21 @@ class LangTrainer(object):
 									ascii=True)
 			for itr in qdar:
 				inputs = makeInp(next(ld))
+				labels = getLabel(inputs['sentence'])
 				outputs = net(inputs)
-				loss = crit(outputs,inputs)
+				loss = self.celoss(outputs.view(-1,outputs.shape[2]),labels.view(-1))
 				devLoss[itr] = loss
 				qdar.set_postfix(loss=str(np.round(loss.cpu().detach().numpy(),3)))
 		devLoss = devLoss.mean()
 		print('Average loss on dev set: '+str(devLoss))
 		return devLoss
 
-	def saveNet(self,net,isBest=False):
-		fileName = 'lm_bestmodel.pth.tar' if isBest else 'lm_checkpoint.pth.tar' 
+	def saveNet(self,net,isBest=False,isStyle=0):
+		# fileName = 'lm_bestmodel.pth.tar' if isBest else 'lm_checkpoint.pth.tar' 
+		fileName = 'lm_bestmodel' if isBest else 'lm_checkpoint' 
+		fileName += '_neg' if isStyle==0 else '_pos'
+		fileName += '.pth.tar'
+
 		filePath = os.path.join(self.savePath, fileName)
 		os.makedirs(self.savePath, exist_ok=True)
 		torch.save({'state_dict': net.state_dict()},filePath)
@@ -131,15 +138,18 @@ class LangTrainer(object):
 		else:
 			print('Saving model...')
 
-	def train(self, loader, net, config):
+	def train(self, loader, net, config,isStyle=0):
 		print('start to train language model...')
 		def getLabel(x):
 			# Shift a tensor and return
 			# import pdb;pdb.set_trace()
-			n = x.numpy()
-			n_shift = np.roll(n,-1,axis=1) # move in the sequence_len dim
-			n_shift[:,-1] = 0
-			return torch.tensor(n_shift)
+			# n = x.numpy()
+			# n_shift = np.roll(n,-1,axis=1) # move in the sequence_len dim
+			# n_shift[:,-1] = 0
+			# return torch.tensor(n_shift)
+			
+			return torch.cat((x[:,1:],torch.zeros_like(x)[:,0:1]),1)
+
 			# return torch.from_numpy(n_shift)
 		# def getLoss(pred,labels):
 		# 	loss = torch.nn.CrossEntropyLoss()
@@ -156,7 +166,12 @@ class LangTrainer(object):
 			print('epoch: '+str(epoch))
 			net.train()
 			self.adjust_learning_rate(self.optimizer, epoch)
-			ld = iter(loader.ldTrain)
+			if isStyle == 0:
+				ld = iter(loader.ldTrain_neg)
+				print("Training negtive model")
+			else:
+				ld = iter(loader.ldTrain_pos)
+				print("Training positive model.")
 			numIters = len(ld)
 			qdar = tqdm.tqdm(range(numIters),
 									total= numIters,
@@ -176,15 +191,19 @@ class LangTrainer(object):
 				qdar.set_postfix(loss=str(np.round(loss.cpu().detach().numpy(),3)))
 
 			# save model
-			self.saveNet(net)
+			self.saveNet(net,isStyle=isStyle)
 			# loss on dev	
-			# devLoss = self.devLoss(loader.ldDev,net,crit)
+			# TODO
+			if isStyle == 0:
+				devLoss = self.devLoss(loader.ldDev_neg,net)
+			else:
+				devLoss = self.devLoss(loader.ldDev_pos,net)
 			# eval on dev
 			# BLEU, Acc = evaluator.evaluate(loader.ldDevEval, net)
 			# save best model
-			# if devLoss < minLoss:
-			# 	minLoss = devLoss
-			# 	self.saveNet(net,isBest=True)
+			if devLoss < minLoss:
+				minLoss = devLoss
+				self.saveNet(net,isStyle=isStyle,isBest=True)
 			epoch += 1
 
 
