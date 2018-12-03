@@ -99,7 +99,7 @@ class StructuredSelfAttention(torch.nn.Module):
         
     def forward(self,x):
         embeddings = self.embeddings(x)       
-        outputs, hidden_state = self.lstm(embeddings.view(self.batch_size,self.max_len,-1),self.init_hidden())       
+        outputs, hidden_state = self.lstm(embeddings.view(self.batch_size,embeddings.shape[1],-1),self.init_hidden())       
         x = F.tanh(self.linear_first(outputs))       
         x = self.linear_second(x)       
         x = self.softmax(x,1)       

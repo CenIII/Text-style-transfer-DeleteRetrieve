@@ -4,8 +4,7 @@ import torch
 import tqdm
 import numpy as np
 import nltk.translate.bleu_score
-from utils import makeInp
-
+from torch.autograd import Variable
 
 class Metrics:
     def __init__(self, model_path, bleu_reference_path, net, word_dict_path):
@@ -29,6 +28,8 @@ class Metrics:
         model_dict.update(pretrained_dict)
         # 3. load the new state dict
         model.load_state_dict(model_dict)
+        if torch.cuda.is_available():
+            model = model.cuda()
         return model
     
     def classifierMetrics(self, preds):
@@ -42,8 +43,8 @@ class Metrics:
             else:
                 key = 'positive'
             for sentence in preds[key]:
-                output,_ = net(makeInp(self.wrap(sentence)))
-                if output[0][0] > output[0][1]:
+                output,_ = net(self.wrap(sentence))
+                if output[0][0] < 0.5:
                     output_label = 0
                 else:
                     output_label = 1
@@ -92,6 +93,9 @@ class Metrics:
 
     def wrap(self, sentence):
         indArr = self.word2index(sentence)
+        if torch.cuda.is_available():
+            indArr = Variable(indArr).cuda()
+        #return {'sentence':indArr,'st_inp_lengths':torch.tensor(np.array([len(sentence)]))}
         return indArr
 
     def word2index(self, sentence):
