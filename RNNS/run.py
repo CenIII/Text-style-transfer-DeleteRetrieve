@@ -75,7 +75,7 @@ def runPreTrain(config):
 	lm_neg = languageModel(**config['lang_model'])
 	utils.checkPath(config,0)
 	utils.checkPath(config,1)
-	import pdb;pdb.set_trace()
+	# import pdb;pdb.set_trace()
 	if torch.cuda.is_available():
 		lm_pos = lm_pos.cuda()
 		lm_neg = lm_neg.cuda()

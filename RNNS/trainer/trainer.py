@@ -168,7 +168,7 @@ class LangTrainer(object):
 		# 	return loss(x,y)
 		self.checkPath(net,isStyle=1)
 		self.checkPath(net,isStyle=0)
-		import pdb;pdb.set_trace()
+		# import pdb;pdb.set_trace()
 		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
 		# train
 		minLoss = float('inf')
