@@ -92,7 +92,7 @@ class Metrics:
 
     def wrap(self, sentence):
         indArr = self.word2index(sentence)
-        return {'sentence':indArr,'st_inp_lengths':torch.tensor(np.array([len(sentence)]))}
+        return indArr
 
     def word2index(self, sentence):
         with open(self.wordDict,"rb") as fp:
