@@ -22,7 +22,7 @@ class Metrics:
         model_dict = model.state_dict()
         # 1. filter out unnecessary keys
         pretrained_dict = {}
-        for k, v in checkpoint['state_dict'].items():
+        for k, v in checkpoint.items():
             if(k in model_dict):
                 pretrained_dict[k] = v
         # 2. overwrite entries in the existing state dict
