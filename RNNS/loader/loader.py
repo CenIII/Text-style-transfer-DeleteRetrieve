@@ -97,7 +97,7 @@ class YelpDataset(Dataset):
 			pt = r
 		brkSent += sentence[pt:]
 		fullSent += sentence[pt:]
-		# print(str(brkSent)+'>>><<<<'+str(marker)+'<<<>>>>'+str(fullSent))
+#		print(str(brkSent)+'>>><<<<'+str(marker)+'<<<>>>>'+str(fullSent))
 		return brkSent, marker, fullSent
 
 	def loadLine(self, sentence, style):
