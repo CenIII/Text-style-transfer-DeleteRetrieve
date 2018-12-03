@@ -44,11 +44,11 @@ class Evaluator(object):
 		pred = out[2]['sequence'][:out[2]['length'][0]]
 		pred = self.ind2word(pred)
 		pred = [pred[i][0][0] for i in range(len(pred))]
-		if '<unk>' in pred:
+		while '<unk>' in pred:
 			pred.remove('<unk>')
-		if '<m_end>' in pred:
+		while '<m_end>' in pred:
 			pred.remove('<m_end>')
-		if '@@END@@' in pred:
+		while '@@END@@' in pred:
 			pred.remove('@@END@@')
 		return ' '.join(pred)
 

@@ -56,7 +56,7 @@ def runOnline(config):
 	if torch.cuda.is_available():
 		net = net.cuda()
 	net = utils.reloadModel(net,config)
-	evaluator = Evaluator(config['evaluator'],config['expPath'])
+	evaluator = Evaluator(config['evaluator'],config['expPath'],config)
 	print("Enter your sentence and its style: (e.g.: 0 the chicken was horrible)")
 	while True:
 		line = input("#: ")
