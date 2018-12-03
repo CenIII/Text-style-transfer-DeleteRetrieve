@@ -32,7 +32,7 @@
     "rnn_cell": "gru"
   },
   "crit": {
-    "use_lang_model": 0
+    "use_lang_model": 1
   },
   "evaluator":{
     "wordDict": "../AuxData/wordDict"

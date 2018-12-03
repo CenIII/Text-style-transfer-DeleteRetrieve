@@ -113,7 +113,7 @@ class Criterion(nn.Module):
 
 
 	def LanguageModelLoss(self,sentence,length,style):
-		labels = sentence.copy().detach()
+		labels = sentence
 		sentence = torch.cat([self.wordDict['@@START@@'],sentence],dim=1) # add <sos>
 		length = length+1
 		if style == 1:
@@ -122,6 +122,7 @@ class Criterion(nn.Module):
 			outputs = self.lm_neg(sentence.view(1,-1),length.view(1,-1))
 
 		loss = self.celoss(outputs.view(-1,outputs.shape[2]),labels.view(-1))
+		loss = loss/(length-1)
 		return loss
 
 	def ReconstructLoss(self):
