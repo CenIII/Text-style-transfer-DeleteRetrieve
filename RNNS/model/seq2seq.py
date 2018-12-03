@@ -86,7 +86,7 @@ class Seq2seq(nn.Module):
 						function=self.decode_function,
 						teacher_forcing_ratio=tf_ratio,
 						outputs_maxlen=max(inputs['st_inp_lengths']))
-		import pdb;pdb.set_trace()
+		# import pdb;pdb.set_trace()
 		return result,result2
 
 
@@ -97,11 +97,13 @@ class Criterion(nn.Module):
 		super(Criterion, self).__init__()
 		print('crit...')
 		self.celoss = nn.CrossEntropyLoss()
+		self.config = config
 		if config['crit']['use_lang_model']==1:
 			self.lm_pos = languageModel(**config['lang_model'])
 			self.lm_neg = languageModel(**config['lang_model'])	
 			
-	def load_crit(self,config):
+	def load_crit(self):
+		config = self.config
 		if config['crit']['use_lang_model']==1:
 			print("Loading language models.")
 			self.lm_pos = utils.reloadLM(self.lm_pos,config,style=1)
@@ -133,7 +135,7 @@ class Criterion(nn.Module):
 		decoder_outputs = outputs[0][0] # Modified. calulate reconstruction error.
 		decoder_outputs = torch.cat([torch.tensor(k).unsqueeze(1) for k in decoder_outputs],1) #[batch, seqlength, vocabsize]
 		
-		if config['crit']['use_lang_model']==1:
+		if self.config['crit']['use_lang_model']==1:
 			# TODO: use cat & split
 			transfer_decoder_outputs = outputs[1][2] # size(batch_size, vocab_size)
 			transfer_sentence = transfer_decoder_outputs['sequence']
@@ -152,7 +154,7 @@ class Criterion(nn.Module):
 		for i in range(batchSize):
 			wordLogPs = decoder_outputs[i][:lengths[i]-1]
 			gtWdIndices = labels[i][1:lengths[i]]
-			if config['crit']['use_lang_model']==1:
+			if self.config['crit']['use_lang_model']==1:
 				loss += self.LanguageModelLoss(transfer_sentence[i],transfer_length[i],styles[i])
 			loss += self.celoss(wordLogPs, gtWdIndices)
 			# loss += - torch.sum(torch.gather(wordLogPs,1,gtWdIndices.unsqueeze(1)))/float(lengths[i]-1)

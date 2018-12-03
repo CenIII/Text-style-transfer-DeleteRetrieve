@@ -32,7 +32,7 @@ def runTrain(config):
 	if config['opt'].continue_exp:
 		net = utils.reloadModel(net, config)
 	crit = Criterion(config)
-	crit.load_crit(config)
+	crit.load_crit()
 	if torch.cuda.is_available():
 		net = net.cuda()
 		crit = crit.cuda()
@@ -73,6 +73,9 @@ def runPreTrain(config):
 	# TODO: modify config.json 
 	lm_pos = languageModel(**config['lang_model'])
 	lm_neg = languageModel(**config['lang_model'])
+	utils.checkPath(config,0)
+	utils.checkPath(config,1)
+	import pdb;pdb.set_trace()
 	if torch.cuda.is_available():
 		lm_pos = lm_pos.cuda()
 		lm_neg = lm_neg.cuda()

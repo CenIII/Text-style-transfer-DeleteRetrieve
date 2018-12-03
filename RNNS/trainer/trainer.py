@@ -139,6 +139,14 @@ class LangTrainer(object):
 		else:
 			print('Saving model...')
 
+	def checkPath(self,net,isBest=True,isStyle=0):
+		# fileName = 'lm_bestmodel.pth.tar' if isBest else 'lm_checkpoint.pth.tar' 
+		fileName = 'lm_bestmodel' if isBest else 'lm_checkpoint' 
+		fileName += '_neg' if isStyle==0 else '_pos'
+		fileName += '.pth.tar'
+
+		filePath = os.path.join(self.savePath, fileName)
+		print(filePath)
 	def train(self, loader, net, config,isStyle=0):
 		print('start to train language model...')
 		def getLabel(x):
@@ -158,12 +166,14 @@ class LangTrainer(object):
 		# 	y = pred.view(-1)
 		# 	# pdb.set_trace()
 		# 	return loss(x,y)
-
+		self.checkPath(net,isStyle=1)
+		self.checkPath(net,isStyle=0)
+		import pdb;pdb.set_trace()
 		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
 		# train
 		minLoss = float('inf')
 		epoch = config['opt'].epoch
-		while True:
+		while epoch<10:
 			print('epoch: '+str(epoch))
 			net.train()
 			self.adjust_learning_rate(self.optimizer, epoch)
@@ -179,7 +189,7 @@ class LangTrainer(object):
 									ascii=True)
 			for itr in qdar: 
 				inputs = makeInp(next(ld))
-				import pdb;pdb.set_trace()
+				# import pdb;pdb.set_trace()
 				with torch.set_grad_enabled(True):
 					# import pdb;pdb.set_trace()
 					labels = getLabel(inputs['sentence'])

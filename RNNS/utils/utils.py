@@ -68,6 +68,12 @@ def reloadModel(model,config):
 	model.load_state_dict(model_dict)
 	return model
 
+def checkPath(config,style):
+	
+	checkpoint = os.path.join(config['neg_model']+'.pth.tar' if style==0 else config['pos_model']+'.pth.tar')
+	print("=> Reloading checkpoint '{}': model".format(checkpoint))
+
+
 def reloadLM(model=None,config=None,style=None):
 	checkpoint = os.path.join(config['neg_model']+'.pth.tar' if style==0 else config['pos_model']+'.pth.tar')
 	print("=> Reloading checkpoint '{}': model".format(checkpoint))
