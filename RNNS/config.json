@@ -10,7 +10,7 @@
     "posStyleDict": "../AuxData/pos_style_count",
     "negStyleDict": "../AuxData/neg_style_count",
     "trainFile": "../Data/yelp/sentiment.train",
-    "devFile": "../Data/yelp/sentiment.dev",
+    "devFile": "../Data/yelp/sentiment.trainsmall",
     "testFile": "../Data/yelp/sentiment.test",
     "selfatt": "../AuxData/selfatt.pt",
     "useNoise": 0
@@ -36,6 +36,7 @@
     "wordDict": "../AuxData/wordDict"
   },
   "evaluator":{
+    "use_lang_model": 1,
     "wordDict": "../AuxData/wordDict"
   },
   "metric":{

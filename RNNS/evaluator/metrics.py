@@ -4,31 +4,41 @@ import torch
 import tqdm
 import numpy as np
 import nltk.translate.bleu_score
-from utils import makeInp
-
+from torch.autograd import Variable
+from model import languageModel,Criterion
+from utils import utils
 
 class Metrics:
-    def __init__(self, model_path, bleu_reference_path, net, word_dict_path):
+    def __init__(self, model_path, bleu_reference_path, net, word_dict_path,config=None):
         self.model_path = model_path
         self.bleu_reference_path = bleu_reference_path
         self.net = net
         self.wordDict = word_dict_path
+        self.config = config
+        if config['evaluator']['use_lang_model']==1:
+            self.crit = Criterion(config)
+            self.crit.load_crit()
+            if torch.cuda.is_available():
+                self.crit = self.crit.cuda()
+
 
     def reloadClassifierModel(self, model, model_path):
 
-        print("=> Reloading checkpoint '{}': model".format(model_path + '/bestmodel.pth.tar'))
-        checkpoint = torch.load(model_path + '/bestmodel.pth.tar')
+        print("=> Reloading checkpoint '{}': model".format(model_path + '/selfatt.pt'))
+        checkpoint = torch.load(model_path + '/selfatt.pt', map_location=lambda storage, loc: storage)
         # model.load_state_dict(self.checkpoint['state_dict'])
         model_dict = model.state_dict()
         # 1. filter out unnecessary keys
         pretrained_dict = {}
-        for k, v in checkpoint['state_dict'].items():
+        for k, v in checkpoint.items():
             if(k in model_dict):
                 pretrained_dict[k] = v
         # 2. overwrite entries in the existing state dict
         model_dict.update(pretrained_dict)
         # 3. load the new state dict
         model.load_state_dict(model_dict)
+        if torch.cuda.is_available():
+            model = model.cuda()
         return model
     
     def classifierMetrics(self, preds):
@@ -42,8 +52,8 @@ class Metrics:
             else:
                 key = 'positive'
             for sentence in preds[key]:
-                output,_ = net(makeInp(self.wrap(sentence)))
-                if output[0][0] > output[0][1]:
+                output,_ = net(self.wrap(sentence))
+                if output[0][0] < 0.5:
                     output_label = 0
                 else:
                     output_label = 1
@@ -92,7 +102,10 @@ class Metrics:
 
     def wrap(self, sentence):
         indArr = self.word2index(sentence)
-        return {'sentence':indArr,'st_inp_lengths':torch.tensor(np.array([len(sentence)]))}
+        if torch.cuda.is_available():
+            indArr = Variable(indArr).cuda()
+        #return {'sentence':indArr,'st_inp_lengths':torch.tensor(np.array([len(sentence)]))}
+        return indArr
 
     def word2index(self, sentence):
         with open(self.wordDict,"rb") as fp:
@@ -133,3 +146,39 @@ class Metrics:
                 references.append([words])
 
         return references
+
+    def langMetrics(self,preds):
+        if self.config['evaluator']['use_lang_model']==0:
+            loss = -1
+        else:
+            with torch.no_grad():
+                loss = 0
+                total = len(preds['positive']) + len(preds['negative'])
+                for style in ['positive','negative']:
+                    for sentence in preds[style]:
+                        sentence_input = self.wrap(sentence)[:,1:]
+                        length = len(sentence)
+                        if style=='postive':
+                            loss += self.crit.LanguageModelLoss(sentence_input,length,1)
+                        else:
+                            loss += self.crit.LanguageModelLoss(sentence_input,length,0)
+                loss = loss/total
+        return loss.item()
+
+            
+            # total = len(preds['positive']) + len(preds['negative'])
+            # def test(net, label):
+            #     correct = 0
+            #     if label == 0:
+            #         key = 'negative'
+            #     else:
+            #         key = 'positive'
+            #     for sentence in preds[key]:
+            #         output,_ = net(self.wrap(sentence))
+            #         if output[0][0] < 0.5:
+            #             output_label = 0
+            #         else:
+            #             output_label = 1
+            #         if output_label == label:
+            #             correct += 1
+            #     return correct

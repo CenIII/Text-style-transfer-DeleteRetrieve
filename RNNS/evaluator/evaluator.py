@@ -5,24 +5,24 @@ import torch
 import tqdm
 from utils import makeInp, seq_collate
 from .metrics import Metrics
-from model import Classifier
+from model import StructuredSelfAttention_test
 
 class Evaluator(object):
 	"""docstring for Evaluator"""
 	def __init__(self,config,expPath, config_all):
 		super(Evaluator, self).__init__()
 		print('evaluator...')
-		with open(config['wordDict'],"rb") as fp:
+		with open(config["wordDict"],"rb") as fp:
 			self.wordDict = pickle.load(fp)
 		self.ind2wordDict = self._buildInd2Word(self.wordDict)
 		self.savePath = expPath
 		os.makedirs(self.savePath, exist_ok=True)
-
-		config_all["model"]["bidirectional"] = 0
-		classifier_net = Classifier(**config_all["model"])
-		
-		self.metrics = Metrics(config_all["metric"]["classifier_weight_path"], config_all["metric"]["ref_file"], classifier_net, config_all["model"]["wordDict"])
+		with open("../AuxData/wordDict_classifier","rb") as fp:
+			word_to_id = pickle.load(fp)
+		attention_model = StructuredSelfAttention_test(batch_size=1,lstm_hid_dim=100,d_a = 100,r=2,vocab_size=len(word_to_id),max_len=25,type=0,n_classes=1,use_pretrained_embeddings=False,embeddings=None)		
+		self.metrics = Metrics(config_all["metric"]["classifier_weight_path"], config_all["metric"]["ref_file"], attention_model,"../AuxData/wordDict_classifier" ,config_all)
 		self.mode = config_all['opt'].mode
+		self.use_lang_model = config['use_lang_model']
 
 	def _buildInd2Word(self,wordDict):
 		vocabs = sorted(self.wordDict.items(), key=lambda x: x[1])
@@ -45,11 +45,11 @@ class Evaluator(object):
 		pred = out[2]['sequence'][:out[2]['length'][0]]
 		pred = self.ind2word(pred)
 		pred = [pred[i][0][0] for i in range(len(pred))]
-		if '<unk>' in pred:
+		while '<unk>' in pred:
 			pred.remove('<unk>')
-		if '<m_end>' in pred:
+		while '<m_end>' in pred:
 			pred.remove('<m_end>')
-		if '@@END@@' in pred:
+		while '@@END@@' in pred:
 			pred.remove('@@END@@')
 		return ' '.join(pred)
 
@@ -87,7 +87,7 @@ class Evaluator(object):
 									ascii=True)
 			for itr in qdar:
 				inputs = makeInp(next(ld))
-				outputs = net(inputs) # Result1, Result2
+				outputs = net(inputs)
 				outputs = outputs[0]
 				brkSent = inputs['brk_sentence']
 				# marker = inputs['marker']
@@ -123,7 +123,11 @@ class Evaluator(object):
 		else:
 			bleu = self.metrics.bleuMetrics(preds)
 		acc = self.metrics.classifierMetrics(preds)
-		return bleu, acc
+		if self.use_lang_model == 1:
+			lang_loss = self.metrics.langMetrics(preds)
+		else:
+			lang_loss = -1
+		return bleu, acc, lang_loss
 
 	def evaluate(self, ld, net):
 		predList_w, styleList = self.predict(ld, net)
@@ -134,8 +138,8 @@ class Evaluator(object):
 			else:
 				key = "negative"
 			preds[key].append(predList_w[i])
-		bleu,acc = self.evaluateMetrics(preds)
-		return bleu, acc
+		bleu,acc, lang_loss = self.evaluateMetrics(preds)
+		return bleu, acc, lang_loss
 		
 
 		# evaluate
