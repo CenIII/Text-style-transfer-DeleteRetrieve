@@ -5,7 +5,7 @@ import tqdm
 from utils import makeInp
 
 class Trainer(object):
-	"""docstring for Trainer"""
+	"""Manage training process with given configurations."""
 	def __init__(self, config, savePath):
 		super(Trainer, self).__init__()
 		print('trainer...')
@@ -14,12 +14,27 @@ class Trainer(object):
 		os.makedirs(self.savePath, exist_ok=True)
 
 	def adjust_learning_rate(self, optimizer, epoch):
-		"""Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+		"""Sets the learning rate to the initial LR decayed by 2 every 50 epochs
+		
+		Args:
+			optimizer: An instance of torch.optim.Optimizer.
+				optimizer.param_group Specifies what Tensors should be optimized on.
+			epoch: Integer, the currect training epoch
+		"""
 		lr = self.lr * (0.5 ** (epoch // 10))
 		for param_group in optimizer.param_groups:
 			param_group['lr'] = lr
 
 	def devLoss(self, ld, net, crit):
+		"""Calculate the loss on validate set.
+
+		Args:
+			ld: A Dataloader containing the validate set.
+			net: To model to evaluate
+			crit: The module that calculate loss based on output sequences with multiple methods
+		Returns:
+			devLoss: The average loss on dev set.
+		"""
 		net.eval()
 		ld = iter(ld)
 		numIters = len(ld)
@@ -39,6 +54,14 @@ class Trainer(object):
 		return devLoss
 
 	def saveNet(self,net,isBest=False):
+		"""Save the state_dict of model.
+		See https://pytorch.org/tutorials/beginner/saving_loading_models.html
+
+		Args:
+			net: The model to save.
+			isBest: Whether the model to be saved is the best model so far.
+				If so, the model will be saved to bestmodel.pth.tar, otherwise checkpoint.pth.tar
+		"""
 		fileName = 'bestmodel.pth.tar' if isBest else 'checkpoint.pth.tar' 
 		filePath = os.path.join(self.savePath, fileName)
 		os.makedirs(self.savePath, exist_ok=True)
@@ -49,6 +72,17 @@ class Trainer(object):
 			print('Saving model...')
 		
 	def train(self, loader, net, crit, evaluator, config):
+		"""Train the model. 
+		
+		The model will be saved after each epoch and the best one will be saved seperately.
+		Args:
+			loader: A LoadHandler instance, contains the loaded dataset.
+			net: The main Seq2seq model to use.
+			crit: The module that calculate loss based on output sequences with multiple methods
+			evaluator: An Evaluator instance encapsulted the calculation of BLEU, 
+				sentiment classify accuracy and language model loss.
+			config: Specified configurations of the trainer.
+		"""
 		print('start to train...')
 		
 		self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), self.lr)
@@ -88,7 +122,7 @@ class Trainer(object):
 			epoch += 1
 
 class LangTrainer(object):
-	"""docstring for Trainer"""
+	"""Manage training process of langauge model only with given configurations."""
 	def __init__(self, config, savePath):
 		super(LangTrainer, self).__init__()
 		print('LM trainer...')
@@ -98,12 +132,27 @@ class LangTrainer(object):
 		self.celoss = torch.nn.CrossEntropyLoss()
 
 	def adjust_learning_rate(self, optimizer, epoch):
-		"""Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+		"""Sets the learning rate to the initial LR decayed by 2 every 50 epochs
+		
+		Args:
+			optimizer: An instance of torch.optim.Optimizer.
+				optimizer.param_group Specifies what Tensors should be optimized on.
+			epoch: Integer, the currect training epoch
+		"""
 		lr = self.lr * (0.5 ** (epoch // 10))
 		for param_group in optimizer.param_groups:
 			param_group['lr'] = lr
 
 	def devLoss(self, ld, net):
+		"""Calculate the loss on validate set.
+
+		Args:
+			ld: A Dataloader containing the validate set.
+			net: To model to evaluate
+			crit: The module that calculate loss based on output sequences with multiple methods
+		Returns:
+			devLoss: The average loss on dev set.
+		"""
 		def getLabel(x):
 			return torch.cat((x[:,1:],torch.zeros_like(x)[:,0:1]),1)
 		net.eval()
@@ -126,6 +175,14 @@ class LangTrainer(object):
 		return devLoss
 
 	def saveNet(self,net,isBest=False,isStyle=0):
+		"""Save the state_dict of model.
+		See https://pytorch.org/tutorials/beginner/saving_loading_models.html
+
+		Args:
+			net: The model to save.
+			isBest: Whether the model to be saved is the best model so far.
+				If so, the model will be saved to bestmodel.pth.tar, otherwise checkpoint.pth.tar
+		"""
 		# fileName = 'lm_bestmodel.pth.tar' if isBest else 'lm_checkpoint.pth.tar' 
 		fileName = 'lm_bestmodel' if isBest else 'lm_checkpoint' 
 		fileName += '_neg' if isStyle==0 else '_pos'
@@ -148,6 +205,15 @@ class LangTrainer(object):
 		filePath = os.path.join(self.savePath, fileName)
 		print(filePath)
 	def train(self, loader, net, config,isStyle=0):
+		"""Train the model. 
+		
+		The model will be saved after each epoch and the best one will be saved seperately.
+		Args:
+			loader: A LoadHandler instance, contains the loaded dataset.
+			net: The language model to be trained.
+			config: Specified configurations of the trainer.
+			isStyle: Specify the source style explicitly
+		"""
 		print('start to train language model...')
 		def getLabel(x):
 			# Shift a tensor and return

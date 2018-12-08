@@ -92,7 +92,14 @@ class Seq2seq(nn.Module):
 
 
 class Criterion(nn.Module):
-	"""docstring for Criterion"""
+	"""Calculate loss based on both input sequences and outputs of decoder.
+	
+	Attributes:
+		LanguageModelLoss(): Calculate crossentropy loss with only the outputs, using two pre-trained language models.
+			The transferd style of the sample will be used to choose which language model to use.
+		ReconstructLoss(): Calculate reconstruction loss of output without tranfering style.
+
+	"""
 	def __init__(self, config):
 		super(Criterion, self).__init__()
 		print('crit...')

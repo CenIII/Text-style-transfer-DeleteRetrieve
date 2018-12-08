@@ -11,6 +11,15 @@ def subset(array):
     return result
 
 def seq_collate(batch):
+	"""Pack a series of samples into a batch. Each Sample is a tuple (brkSentence, [style], sentence, marker).
+
+	The default collate_fn of Pytorch use torch.stack() assuming every sample has the same size.
+	For this task, the length of sentences may vary, so do the sample generated.
+	See https://jdhao.github.io/2017/10/23/pytorch-load-data-and-make-batch/ for more information.
+
+	Returns:
+		A dict of list with all its member being a list of length batch_size
+	"""
 	# print('>>>>>>>batch: '+str(batch))
 	batchSize = len(batch)
 	def extract(ind):
@@ -62,6 +71,14 @@ def seq_collate(batch):
 			'mk_inp_lengths':mkLengths }
 
 def reloadModel(model,config):
+	"""Load checkpoint of the model using torch.load()
+
+	Args:
+		model: which pytorch model to load the parameters.
+		config: information of loader. the checkpoint is at contPath/resume_file
+	Returns:
+		model: the model with parameters loaded.
+	"""
 	checkpoint = os.path.join(config['contPath'], config['opt'].resume_file)
 	print("=> Reloading checkpoint '{}': model".format(checkpoint))
 	checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
@@ -85,6 +102,13 @@ def checkPath(config,style):
 
 
 def reloadLM(model=None,config=None,style=None):
+	"""Reload pretrained language model.
+
+	Args:
+		model: The pytorch module object of network.
+		config: The parsed configuration
+		style: Specify to load pretrained weight of which style 
+	"""
 	checkpoint = os.path.join(config['neg_model']+'.pth.tar' if style==0 else config['pos_model']+'.pth.tar')
 	print("=> Reloading checkpoint '{}': model".format(checkpoint))
 
@@ -106,6 +130,14 @@ def reloadLM(model=None,config=None,style=None):
 	return model
 
 def makeInp(inputs):
+	"""Move tensors onto GPU if available.
+
+	Args:
+		inputs: A dict with a batch of word-indexed data from DataLoader. Contains
+			['brk_sentence', 'bs_inp_lengths', 'style', 'sentence', 'st_inp_lengths', 'marker', 'mk_inp_lengths']
+	Returns:
+		inputs: The dict with same structure but stored on GPU.
+	"""
 	if torch.cuda.is_available():
 		for key in inputs:
 			inputs[key] = inputs[key].cuda()

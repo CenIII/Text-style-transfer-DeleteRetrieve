@@ -9,6 +9,7 @@ from model import languageModel,Criterion
 from utils import utils
 
 class Metrics:
+    """Calculating metrics given predictions and loading the models needed for that."""
     def __init__(self, model_path, bleu_reference_path, net, word_dict_path,config=None):
         self.model_path = model_path
         self.bleu_reference_path = bleu_reference_path
@@ -23,7 +24,7 @@ class Metrics:
 
 
     def reloadClassifierModel(self, model, model_path):
-
+        """Load pretrained style classifier"""
         print("=> Reloading checkpoint '{}': model".format(model_path + '/selfatt.pt'))
         checkpoint = torch.load(model_path + '/selfatt.pt', map_location=lambda storage, loc: storage)
         # model.load_state_dict(self.checkpoint['state_dict'])
@@ -42,6 +43,7 @@ class Metrics:
         return model
     
     def classifierMetrics(self, preds):
+        """Calculating classification accuracy on transferred outputs"""
         net = self.reloadClassifierModel(self.net, self.model_path)
         correct = 0
         total = len(preds['positive']) + len(preds['negative'])
@@ -123,6 +125,7 @@ class Metrics:
         return indArr.unsqueeze(0)
 
     def bleuMetrics(self, preds):
+        """Calculating BLEU on transferred outputs"""
         references = self.loadReferences()
         hypothesis = preds['positive'] + preds['negative']
         score = nltk.translate.bleu_score.corpus_bleu(references, preds['positive'] + preds['negative'])
@@ -148,6 +151,7 @@ class Metrics:
         return references
 
     def langMetrics(self,preds):
+        """Distribute tranferred sentence to the correct langauge model and calculate loss """
         if self.config['evaluator']['use_lang_model']==0:
             loss = -1
         else:

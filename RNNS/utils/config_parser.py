@@ -5,6 +5,10 @@ import os
 class ConfigParser: 
 
 	def _create_command_line_parser():
+		"""	Specify the expected arguments
+		Returns:
+			parser: An ArgumentParser object from standard library argparse.
+		"""
 		parser = argparse.ArgumentParser()
 		parser.add_argument('-m', '--mode', type=str, choices=['train','val','test','online','pretrain'], default='train', help='running mode: [train | val | test]' )
 		parser.add_argument('-c', '--continue_exp', type=str, help='continue exp')
@@ -16,6 +20,10 @@ class ConfigParser:
 		return parser
 	# Command line parser
 	def _parse_command_line():
+		"""Finish command line parsing
+		Returns:
+			args: argparse.Namespace object 
+		"""
 		parser = ConfigParser._create_command_line_parser()
 		args = parser.parse_args()
 		print('options: ')
@@ -26,6 +34,12 @@ class ConfigParser:
 
 	# Config file parser
 	def _parse_config_file(opt):
+		"""Read JSON formatted configuration file.
+		Args:
+			opt: A Namespace object formed by parsing command line.
+		Returns:
+			config: A dict contains information of loader,trainer, model, evaluator, crit, expPath and opt(parsed command line)
+		"""
 		with open('./config.json', 'r') as f:
 			config = json.load(f)
 		if opt.continue_exp:
@@ -39,6 +53,7 @@ class ConfigParser:
 		return config
 
 	def parse_config():
+		"""The top level function of parsing."""
 		# parse command line
 		opt = ConfigParser._parse_command_line()
 		# parse config file, combine opt and config into config. 

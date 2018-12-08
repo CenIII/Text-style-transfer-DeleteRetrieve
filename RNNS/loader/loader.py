@@ -5,12 +5,28 @@ from utils import subset, seq_collate, StyleMarker
 import numpy as np 
 
 class YelpDataset(Dataset):
-	"""docstring for Dataset"""
+	"""Custom dataset inherit torch.utils.data.Dataset. 
+	
+	See https://pytorch.org/tutorials/beginner/data_loading_tutorial.html for more information.
+
+	Attributes:
+		data: A list of (style, sentence) loaded from the dataset.
+		wordDict: A dict in form of {word: word_index}.
+		pos_style_dict, neg_style_dict: A dict in form of {marker: score}
+		sos_id: Int,The word index for auxilary token '@@START@@'.
+		eos_id: Int, Index for '@@END@@'.
+		isTrans: Int, whether to transfer style.
+	"""
 	# dataset behave differently when requesting label or unlabel data
 	POS = 1
 	NEG = 0
 	OppStyle = {POS:NEG,NEG:POS}
 	def __init__(self, config, datafile,forceNoNoise=False,hasStyle=None): #, wordDictFile): #, labeled=True, needLabel=True):
+		"""
+		Args:
+			config: Configuration of loader.
+			datafile: Path to the training set.
+		"""
 		super(YelpDataset, self).__init__()
 		print('- dataset: '+datafile)
 		# self.data = {self.POS:[], self.NEG:[]}
@@ -40,6 +56,12 @@ class YelpDataset(Dataset):
 		return True
 
 	def readData(self,datafile,hasStyle=None):
+		"""Read data file and parse it into a list of (style, sentence).
+		Args:
+			datafile: the path to dataset.
+		Returns:
+			data: A list of (style, sentence) tuple, in which style is an interger and sentence is a list of tokens.
+		"""
 		data = [] #{self.POS:[], self.NEG:[]}
 		# proc .0 file (negative)
 		def subread(postfix,style):
@@ -60,9 +82,11 @@ class YelpDataset(Dataset):
 		return data
 
 	def __len__(self):
+		"""Make sure len(dataset) return the size of dataset. Required to override."""
 		return len(self.data)
 
 	def __getitem__(self, idx):
+		"""Support indexing such that dataset[i] get ith sample. Required to override"""
 		style, sentence = self.data[idx]
 		return self.loadLine(sentence, style)
 
@@ -86,6 +110,7 @@ class YelpDataset(Dataset):
 		return newList
 
 	def extractMarker(self, sentence):
+		"""Find the marker with the most sentiment."""
 		ptList = self.sm.mark(sentence)
 		if self.useNoise:
 			ptList = self.applyNoise(ptList,len(sentence))
@@ -104,6 +129,14 @@ class YelpDataset(Dataset):
 		return brkSent, marker, fullSent
 
 	def loadLine(self, sentence, style):
+		"""Given a sentence and its style, perform the Delete stage of our algorithm.
+
+		Returns:
+			brkSentence: The word-index of marker-excluded sentence with auxilary tokens <unk> and <m_end> to indicate the position of marker.
+			style: Target style. The behavior may vary depending on OptStyle.
+			sentence: The word-indexed original sencentence with auxilary tokens.
+			marker: The word-indexed marker
+		"""
 		# print(sentence)
 		brkSentence, marker, sentence = self.extractMarker(sentence)
 
@@ -117,6 +150,11 @@ class YelpDataset(Dataset):
 		return (brkSentence, [style], sentence, marker) #targetMarker
 
 	def word2index(self, sList, sos=False):
+		"""For each sentence in a list of sentences, convert its tokens into word index including auxilary tokens.
+		Args:
+			sList: A list of sentences.
+			sos: A boolean indicating whether to add <sos> token at the start of sentences.
+		"""
 		resList = []
 		for sentence in sList:
 			indArr = []
@@ -134,8 +172,18 @@ class YelpDataset(Dataset):
 
 
 class LoaderHandler(object):
-	"""docstring for LoaderHandler"""
+	"""Load dataset to be used later as required in the config.
+	
+	Attributes:
+		ldDev: An instance of Pytorch Dataloader. batch_size depends on config. collate_fn overloaded in utils.py
+		ldDevEval: The same as ldDev, except the batch_size is always 1.
+		ldTrain: It is created only in training mode. Data is shuffled.
+	"""
 	def __init__(self, config):
+		""" Init instance. Only one instance should be created.
+		Args:
+			config: An instance of ConfigParser, contains information parsed from both command line and config file.
+		"""
 		super(LoaderHandler, self).__init__()
 		print('loader handler...')	
 		mode = config['opt'].mode

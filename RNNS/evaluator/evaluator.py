@@ -8,7 +8,7 @@ from .metrics import Metrics
 from model import StructuredSelfAttention_test
 
 class Evaluator(object):
-	"""docstring for Evaluator"""
+	"""Contains methods for predicting and evaluating the model"""
 	def __init__(self,config,expPath, config_all):
 		super(Evaluator, self).__init__()
 		print('evaluator...')
@@ -25,6 +25,12 @@ class Evaluator(object):
 		self.use_lang_model = config['use_lang_model']
 
 	def _buildInd2Word(self,wordDict):
+		"""Construct index to word relationship.
+		Args:
+			wordDict: A dict with {word:index} pairs
+		Returns:
+			A list of words, use the position in the list as the word index
+		"""
 		vocabs = sorted(self.wordDict.items(), key=lambda x: x[1])
 		vocabs = [vocabs[i][0] for i in range(len(vocabs))]
 		return vocabs
@@ -36,6 +42,7 @@ class Evaluator(object):
 			return self.ind2wordDict[sequence]
 
 	def predictLine(self, ld, net, line, style):
+		"""Generate transferred sentence from a single line input"""
 		net.eval()
 		batch = ld.dataset.loadLine(line, style)
 		inp = seq_collate([batch])
@@ -75,6 +82,7 @@ class Evaluator(object):
 				cnt += 1
 
 	def predict(self, ld, net):
+		"""Generate output for a list of input sentences"""
 		net.eval()
 		ld = ld.ldDevEval if self.mode=='val' else ld.ldTestEval
 		ld = iter(ld)
@@ -103,6 +111,7 @@ class Evaluator(object):
 		return predList_w, styleList
 	
 	def constructSentence(self, predList_w):
+		"""Eliminate special tokens for later stage"""
 		results = []
 		tags = ['<unk>', '<m_end>','@@START@@', '@@END@@']
 		for sentence in predList_w:
@@ -118,6 +127,7 @@ class Evaluator(object):
 		return results
 
 	def evaluateMetrics(self, preds):
+		"""Wrapper for calculating metrics using Metrics class methods"""
 		if self.mode == 'val':
 			bleu = -1
 		else:
@@ -130,6 +140,7 @@ class Evaluator(object):
 		return bleu, acc, lang_loss
 
 	def evaluate(self, ld, net):
+		"""Seperate input with different styles."""
 		predList_w, styleList = self.predict(ld, net)
 		preds = {"positive":[],"negative":[]}
 		for i in range(len(predList_w)):

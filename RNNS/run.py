@@ -27,6 +27,7 @@ import fileinput
 	# run.py
 
 def runTrain(config):
+	"""Train the main network"""
 	loader = LoaderHandler(config)
 	net = Seq2seq(**config['model'])
 	if config['opt'].continue_exp:
@@ -41,6 +42,7 @@ def runTrain(config):
 	trainer.train(loader, net, crit, evaluator, config)
 
 def runVal(config):
+	"""Evaluate model on valid data"""
 	loader = LoaderHandler(config)
 	net = Seq2seq(**config['model'])
 	if torch.cuda.is_available():
@@ -52,6 +54,7 @@ def runVal(config):
 	return 
 
 def runOnline(config):
+	"""Online style tranfer for input sentence"""
 	loader = LoaderHandler(config)
 	net = Seq2seq(**config['model'])
 	if torch.cuda.is_available():
@@ -68,6 +71,7 @@ def runOnline(config):
 		print(pred)
 
 def runPreTrain(config):
+	"""Train the language model"""
 	# utils.reloadLM(config=config)
 	loader = LoaderHandler(config)
 	# TODO: modify config.json 
@@ -86,7 +90,7 @@ def runPreTrain(config):
 	lang_trainer.train(loader,lm_neg,config,isStyle=0)
 
 def main():
-	config = ConfigParser.parse_config()
+	config = ConfigParser.parse_config() # Load parameters from command line and json file
 	mode = config['opt'].mode
 	if mode == 'train':
 		runTrain(config)
