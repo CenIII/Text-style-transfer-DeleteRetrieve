@@ -152,6 +152,24 @@ class Metrics:
 
     def langMetrics(self,preds):
         """Distribute tranferred sentence to the correct langauge model and calculate loss """
+        def findContext(sentence):
+            length = len(sentence)
+            hasStart = False
+            hasEnd = False
+            start = 0
+            end = 0
+            for i in range(length):
+                # Find the last <m_end>
+                if sentence[i][0][0] == '<m_end>' and i<length-1:
+                    end = i+2
+                    hasEnd = True
+                # Find the first <unk>
+                if sentence[i][0][0] == '<unk>' and i>1 and (not hasStart):
+                    start = i-1
+                    hasStart = True
+            if not hasEnd:
+                end = len(sentence)
+            return sentence[start:end]
         if self.config['evaluator']['use_lang_model']==0:
             loss = -1
         else:
@@ -160,6 +178,7 @@ class Metrics:
                 total = len(preds['positive']) + len(preds['negative'])
                 for style in ['positive','negative']:
                     for sentence in preds[style]:
+                        sentence = findContext(sentence)
                         sentence_input = self.wrap(sentence)[:,1:]
                         length = len(sentence)
                         if style=='postive':
