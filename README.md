@@ -19,40 +19,56 @@ pip install torch
 ### Installing
 
 The checkpoint of trained model are needed for evaluating and online transferring. 
-You can download [checkpoint](https://drive.google.com/file/d/1dCYjVoylK4BOgiKlGDolpJEU2TQq3LtK/view?usp=sharing) here. After downloading,
+<!-- You can download [checkpoint](https://drive.google.com/file/d/1dCYjVoylK4BOgiKlGDolpJEU2TQq3LtK/view?usp=sharing) here. After downloading, unzip to target folder
 
 ```
 unzip exp.zip
 mv exp path_of_this_git/RNNS
 ```
+-->
 
-And repeat
+
+You can download the [word2vec embedding](https://code.google.com/archive/p/word2vec/) pre-trained on Google New Corpus. 
+
+The Yelp dataset used can be find [here](https://github.com/shentianxiao/language-style-transfer), put the `data` folder into this git 
+
+
+
+## Running the experiment
+To get help about setting parameters with command line arguments, run
+```
+python run.py -h
+```
+All the hyper-parameters have their default value set already. But if you want to modify them, you can input them either through command line or in `config.json`. All following operation assume the current working directory to be `RNNS` folder.
+
+### Pre-train language model
+
+Train the language models for two sentiments
 
 ```
-until finished
+python run.py -m pretrain
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
+### Training model
 
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
+To train the whole model
 ```
-Give an example
+python run.py -m train
+```
+The checkpoint will be saved at `RNNS/exp` folder.
+
+### Evaluate model
+Provide metrics on the test set, including BLEU, accuracy and perplexity. Assume the experiment result is in `RNNS/exp/exp0`
+```
+python3 run.py -m test -c exp0 -e exp0 -f bestmodel.pth.tar
+```
+### Online transferring
+Entering the source sentiment and sentence, the transferred sentence will be displayed.
+```
+python3 run.py -m online -c exp0 -e exp0 -f bestmodel.pth.tar
 ```
 
-### And coding style tests
 
-Explain what these tests test and why
-
-```
-Give an example
-```
 
 ## License
 
