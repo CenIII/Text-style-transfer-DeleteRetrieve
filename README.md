@@ -37,6 +37,11 @@ The Yelp dataset used can be find [here](https://github.com/shentianxiao/languag
 
 
 ## Running the experiment
+First be sure that you are at "./RNNS" working directory. 
+```
+cd RNNS
+```
+
 To get help about setting parameters with command line arguments, run
 ```
 python run.py -h
