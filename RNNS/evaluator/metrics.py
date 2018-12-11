@@ -16,17 +16,16 @@ class Metrics:
         self.net = net
         self.wordDict = word_dict_path
         self.config = config
-        if config['evaluator']['use_lang_model']==1:
+        if config['evaluator']['lm_eval']==1:
             self.crit = Criterion(config)
-            self.crit.load_crit()
             if torch.cuda.is_available():
                 self.crit = self.crit.cuda()
 
 
     def reloadClassifierModel(self, model, model_path):
         """Load pretrained style classifier"""
-        print("=> Reloading checkpoint '{}': model".format(model_path + '/selfatt.pt'))
-        checkpoint = torch.load(model_path + '/selfatt.pt', map_location=lambda storage, loc: storage)
+        print("=> Reloading checkpoint '{}': model".format(model_path))
+        checkpoint = torch.load(model_path, map_location=lambda storage, loc: storage)
         # model.load_state_dict(self.checkpoint['state_dict'])
         model_dict = model.state_dict()
         # 1. filter out unnecessary keys
@@ -170,7 +169,7 @@ class Metrics:
             if not hasEnd:
                 end = len(sentence)
             return sentence[start:end]
-        if self.config['evaluator']['use_lang_model']==0:
+        if self.config['evaluator']['lm_eval']==0:
             loss = -1
         else:
             with torch.no_grad():

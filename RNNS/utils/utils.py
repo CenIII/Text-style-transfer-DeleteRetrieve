@@ -110,7 +110,7 @@ def reloadLM(model=None,config=None,style=None):
 		style: Specify to load pretrained weight of which style 
 	"""
 	checkpoint = os.path.join(config['neg_model']+'.pth.tar' if style==0 else config['pos_model']+'.pth.tar')
-	print("=> Reloading checkpoint '{}': model".format(checkpoint))
+	# print("=> Reloading checkpoint '{}': model".format(checkpoint))
 
 	checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
 	model_dict = model.state_dict()

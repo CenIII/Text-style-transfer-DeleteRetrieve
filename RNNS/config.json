@@ -4,17 +4,16 @@
   "pos_model": "../AuxData/langModel/lm_bestmodel_pos",
   "neg_model": "../AuxData/langModel/lm_bestmodel_neg",
   "loader": {
-    "batchSize": 64,
+    "batchSize": 4,
     "isTrans": 0,
     "wordDict": "../AuxData/wordDict",
     "posStyleDict": "../AuxData/pos_style_count",
     "negStyleDict": "../AuxData/neg_style_count",
     "trainFile": "../Data/yelp/sentiment.train",
-    "devFile": "../Data/yelp/sentiment.trainsmall",
+    "devFile": "../Data/yelp/sentiment.dev",
     "testFile": "../Data/yelp/sentiment.test",
     "selfatt": "../AuxData/selfatt.pt",
-    "useNoise": 0
-
+    "useNoise": 1
   },
   "trainer":{
     "lr": 1e-4,
@@ -29,19 +28,16 @@
     "dropout_p": 0, 
     "n_layers": 1, 
     "bidirectional":1, 
-    "rnn_cell": "gru"
-  },
-  "crit": {
-    "use_lang_model": 1,
-    "wordDict": "../AuxData/wordDict"
+    "rnn_cell": "gru",
+    "use_lang_model": 0
   },
   "evaluator":{
-    "use_lang_model": 1,
+    "lm_eval": 1,
     "wordDict": "../AuxData/wordDict"
   },
   "metric":{
     "ref_file": "../Data/yelp/reference",
-    "classifier_weight_path": "./exp/classifier"
+    "classifier_weight_path": "../AuxData/classifier/classifier.pt"
   },
   "lang_model":{
     "embedding": "../AuxData/word2vec.npy", 

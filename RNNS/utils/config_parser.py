@@ -10,13 +10,13 @@ class ConfigParser:
 			parser: An ArgumentParser object from standard library argparse.
 		"""
 		parser = argparse.ArgumentParser()
-		parser.add_argument('-m', '--mode', type=str, choices=['train','val','test','online','pretrain'], default='train', help='running mode: [train | val | test]' )
-		parser.add_argument('-c', '--continue_exp', type=str, help='continue exp')
-		parser.add_argument('-e', '--exp', type=str, default='pose', help='experiments name: [anystring]')
+		parser.add_argument('-m', '--mode', type=str, choices=['train','val','test','online','pretrain'], default='train', help='Running mode: [pretrain | train | val | test | online]' )
+		parser.add_argument('-c', '--continue_exp', type=str, help='The exp folder name from which you want to continue. This option is valid for train, val and test modes.')
+		parser.add_argument('-e', '--exp', type=str, default='pose', help='The exp folder name to which you want to save your checkpoint or outputs, e.g. try01. This is valid for train, val and test modes.')
 		# parser.add_argument('-v', '--evaluate', action='store_true', help='load predicted results')
-		parser.add_argument('-f', '--resume_file', type=str, default='checkpoint.pth.tar' ,help='resume_file_name')
-		parser.add_argument('-p', '--epoch', type=str, default='0', help='epoch')
-		parser.add_argument('-t', '--trans_style', type=int, default=0, help='transfer to opposite style or just reconstruction? can not be 1 when training.')
+		parser.add_argument('-f', '--resume_file', type=str, default='checkpoint.pth.tar' ,help='The checkpoint file name.')
+		parser.add_argument('-p', '--epoch', type=str, default='0', help='Epoch num you want to start from')
+		parser.add_argument('-t', '--trans_style', type=int, default=0, help='Want to transfer to opposite style or just reconstruction? Can not be 1 when training!')
 		return parser
 	# Command line parser
 	def _parse_command_line():

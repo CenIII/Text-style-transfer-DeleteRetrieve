@@ -1,3 +1,4 @@
+import os
 import torch
 from loader import LoaderHandler
 from evaluator import Evaluator
@@ -6,26 +7,6 @@ from model import Seq2seq, Criterion, languageModel
 from utils import ConfigParser, utils
 import fileinput
 
-#todo: 
-# 1. add word ind trans tools as a class to utils? can be used by evaluator and loader.
-# 2. make delete and retrieve a class? encapsulate into loader. 
-
-# reorganize the code to 
-# folder:
-	# AuxDATA
-	# Data
-	# Model
-	# Tools
-		# trainer
-		# loader
-		# delete&retrieve
-		# evaluator
-		# metrics
-		# utils
-			# wordindvec
-	# config
-	# run.py
-
 def runTrain(config):
 	"""Train the main network"""
 	loader = LoaderHandler(config)
@@ -33,7 +14,6 @@ def runTrain(config):
 	if config['opt'].continue_exp:
 		net = utils.reloadModel(net, config)
 	crit = Criterion(config)
-	crit.load_crit()
 	if torch.cuda.is_available():
 		net = net.cuda()
 		crit = crit.cuda()
@@ -60,7 +40,7 @@ def runOnline(config):
 	if torch.cuda.is_available():
 		net = net.cuda()
 	net = utils.reloadModel(net,config)
-	evaluator = Evaluator(config['evaluator'],config['expPath'])
+	evaluator = Evaluator(config['evaluator'],config['expPath'],config)
 	print("Enter your sentence and its style: (e.g.: 0 the chicken was horrible)")
 	while True:
 		line = input("#: ")

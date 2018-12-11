@@ -29,7 +29,6 @@ class YelpDataset(Dataset):
 		"""
 		super(YelpDataset, self).__init__()
 		print('- dataset: '+datafile)
-		# self.data = {self.POS:[], self.NEG:[]}
 		self.data = self.readData(datafile,hasStyle=None)
 		with open(config['posStyleDict'], "rb") as fp:   #Pickling
 			self.pos_style_dict =  pickle.load(fp)

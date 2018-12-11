@@ -22,7 +22,7 @@ class Evaluator(object):
 		attention_model = StructuredSelfAttention_test(batch_size=1,lstm_hid_dim=100,d_a = 100,r=2,vocab_size=len(word_to_id),max_len=25,type=0,n_classes=1,use_pretrained_embeddings=False,embeddings=None)		
 		self.metrics = Metrics(config_all["metric"]["classifier_weight_path"], config_all["metric"]["ref_file"], attention_model,"../AuxData/wordDict_classifier" ,config_all)
 		self.mode = config_all['opt'].mode
-		self.use_lang_model = config['use_lang_model']
+		self.use_lang_model = config['lm_eval']
 
 	def _buildInd2Word(self,wordDict):
 		"""Construct index to word relationship.
@@ -47,7 +47,7 @@ class Evaluator(object):
 		batch = ld.dataset.loadLine(line, style)
 		inp = seq_collate([batch])
 		# predict
-		out = net(inp)
+		out = net(inp)[0]
 		# ind2word
 		pred = out[2]['sequence'][:out[2]['length'][0]]
 		pred = self.ind2word(pred)

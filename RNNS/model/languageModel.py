@@ -8,7 +8,7 @@ import numpy as np
 class languageModel(nn.Module):
 	def __init__(self, embedding=None, wordDict=None, hidden_size=300, style_size=100, input_dropout_p=0, max_len=100, dropout_p=0, n_layers=1, bidirectional=False, rnn_cell='gru', decode_function=F.log_softmax):
 		super(languageModel, self).__init__()
-		print('Language model...')
+		# print('Language model...')
 		if embedding==None:
 			print('no embedding given. please try again')
 			exit(0)
