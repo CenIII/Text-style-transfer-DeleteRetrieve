@@ -18,7 +18,7 @@ pip install torch
 
 ### Installing
 
-*All data and files are included and you can now skip to the "Running the experiment" section.* In case you lose any data or checkpoint to test the code, below are some download links.
+**All data and files are included and you can now skip to the "Running the experiment" section.** In case you lose any data or checkpoint to test the code, below are some download links.
 
 The checkpoint of trained model are needed for evaluating and online transferring. 
 <!-- You can download [checkpoint](https://drive.google.com/file/d/1dCYjVoylK4BOgiKlGDolpJEU2TQq3LtK/view?usp=sharing) here. After downloading, unzip to target folder
