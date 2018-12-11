@@ -1,4 +1,4 @@
-import torch,keras
+import torch
 import numpy as np
 from torch.autograd import Variable
 import torch.nn.functional as F
@@ -94,7 +94,12 @@ class StructuredSelfAttention_test(torch.nn.Module):
        
         
     def init_hidden(self):
-        return (Variable(torch.zeros(1,self.batch_size,self.lstm_hid_dim)).cuda(),Variable(torch.zeros(1,self.batch_size,self.lstm_hid_dim)).cuda())
+        x = Variable(torch.zeros(1,self.batch_size,self.lstm_hid_dim))
+        y = Variable(torch.zeros(1,self.batch_size,self.lstm_hid_dim))
+        if torch.cuda.is_available():
+            x = x.cuda()
+            y = y.cuda()
+        return (x,y)
        
         
     def forward(self,x):
