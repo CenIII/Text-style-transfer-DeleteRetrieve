@@ -130,7 +130,7 @@ class Criterion(nn.Module):
 		loss1 = -torch.sum((labels_rep*torch.log(scores+1e-18)+(1-labels_rep)*torch.log(1-scores+1e-18))*mask)/batch_size
 
 		def checkFirmPreds(scores,margin=0.05):
-			tmp = torch.zeros(len(scores))-1.
+			tmp = (torch.zeros(len(scores))-1.).type(device.FloatTensor)
 			tmp1 = 2*(scores>(0.5+margin)).type(device.FloatTensor).squeeze()
 			tmp2 = (scores<(0.5-margin)).type(device.FloatTensor).squeeze()
 			tmp = tmp+tmp1+tmp2
