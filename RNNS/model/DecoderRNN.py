@@ -15,6 +15,8 @@ if torch.cuda.is_available():
 else:
     import torch as device
 
+from functools import reduce
+
 
 class DecoderRNN(BaseRNN):
     r"""
@@ -62,31 +64,46 @@ class DecoderRNN(BaseRNN):
     """
 
     KEY_ATTN_SCORE = 'attention_score'
+    KEY_SCORE = 'score'
     KEY_LENGTH = 'length'
-    KEY_SEQUENCE = 'sequence'
+    # KEY_SEQUENCE = 'sequence'
+    KEY_LEFT_OVER = 'left_over'
+
 
     def __init__(self, output_size, max_len, hidden_size,
             n_layers=1, rnn_cell='gru', bidirectional=False, use_attention=False):
-        super(DecoderRNN, self).__init__(output_size, max_len, hidden_size,
-                input_dropout_p, dropout_p,
-                n_layers, rnn_cell)
-        self.THRES = 0.52
+        super(DecoderRNN, self).__init__(output_size, max_len, hidden_size, 0, 0, n_layers, rnn_cell)
+        self.MARGIN = 0.05
         self.bidirectional_encoder = bidirectional
-        self.rnn = self.rnn_cell(300, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
+        self.rnn = self.rnn_cell(300, hidden_size, n_layers, batch_first=True, dropout=0)
 
         self.output_size = output_size
         self.max_length = max_len
         self.use_attention = use_attention
 
         if use_attention:
-            self.attention = Attention(self.hidden_size)
+            self.attention = Attention(2048)
 
-        self.out = nn.Linear(self.hidden_size, self.output_size)
+        self.out = nn.Linear(2048, self.output_size)
+
+    def getLeftOver(self, attns, out_lens, encoder_outputs):
+        attns = torch.cat(attns,dim=1) # (batchSize, steps, numHiddens)  [16, 30, 463]
+        batchSize, _, numHiddens = attns.shape
+        left_over = [] # should be 16x463
+        def do_mult(x1, x2): return x1 * x2
+        for i in range(batchSize):
+            effAtts = 1. - attns[i,:out_lens[i]]
+            leftAtt = reduce(do_mult, effAtts)
+
+            left_over.append(encoder_outputs[i]*(leftAtt.unsqueeze(1)))
+        left_over = torch.stack(left_over, dim=0)
+        return left_over
+
 
     def forward_step(self, input_var, hidden, encoder_outputs, function):
         batch_size = input_var.size(0)
         output_size = input_var.size(1)
-        embedded = torch.zeros([batch_size, 300]) 
+        embedded = torch.zeros([batch_size, 1, 300]) 
         if torch.cuda.is_available():
             embedded = embedded.cuda()
 
@@ -95,20 +112,20 @@ class DecoderRNN(BaseRNN):
         attn = None
         if self.use_attention:
             # todo: use part of encoder_outputs for att
-            output, attn = self.attention(output, encoder_outputs)
+            output, attn = self.attention(output[:,:,:2048], encoder_outputs)
 
-        predicted_score = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
+        predicted_score = function(self.out(output.contiguous().view(-1, 2048))).view(batch_size, output_size, -1)
         return predicted_score, hidden, attn
 
-    def forward(self, inputs=None, style_embd=None, encoder_hidden=None, encoder_outputs=None,
+    def forward(self, inputs=None, style_embd=None, encoder_hidden=None, encoder_outputs=None, labels=None,
                     function=F.sigmoid):
         ret_dict = dict()
         if self.use_attention:
             ret_dict[DecoderRNN.KEY_ATTN_SCORE] = list()
 
-        style_embd = style_embd.transpose(0,1).repeat(encoder_hidden.shape[0],1,1)
         # todo: cat to both hidden and cell state
-        encoder_hidden = torch.cat((style_embd, encoder_hidden),2)  
+        style_embd = style_embd.unsqueeze(0)
+        encoder_hidden = (torch.cat((encoder_hidden[0],style_embd),2), torch.cat((encoder_hidden[1],style_embd),2))
 
         inputs, batch_size, max_length = self._validate_args(inputs, encoder_hidden, encoder_outputs,
                                                              function)
@@ -117,12 +134,17 @@ class DecoderRNN(BaseRNN):
         decoder_outputs = []
         lengths = np.array([max_length] * batch_size)
 
+        def getEOS(step_output, labels):
+            tmp1 = labels & step_output.data.le(0.5+self.MARGIN).type(device.LongTensor).squeeze()
+            tmp2 = (1-labels) & step_output.data.ge(0.5-self.MARGIN).type(device.LongTensor).squeeze()
+            return (tmp1+tmp2).unsqueeze(1)
+            
         def decode(step, step_output, step_attn):
             decoder_outputs.append(step_output)
             if self.use_attention:
                 ret_dict[DecoderRNN.KEY_ATTN_SCORE].append(step_attn)
 
-            eos_batches = step_output.data.le(self.THRES)
+            eos_batches = getEOS(step_output, labels)
             if eos_batches.dim() > 0:
                 eos_batches = eos_batches.cpu().view(-1).numpy()
                 update_idx = ((lengths > step) & eos_batches) != 0
@@ -137,9 +159,12 @@ class DecoderRNN(BaseRNN):
             step_output = decoder_output.squeeze(1)
             decode(di, step_output, step_attn)
 
+        ret_dict[DecoderRNN.KEY_SCORE] = decoder_outputs
         ret_dict[DecoderRNN.KEY_LENGTH] = lengths.tolist()
 
-        return decoder_outputs, decoder_hidden, ret_dict
+        ret_dict[DecoderRNN.KEY_LEFT_OVER] = self.getLeftOver(ret_dict[DecoderRNN.KEY_ATTN_SCORE], ret_dict[DecoderRNN.KEY_LENGTH], encoder_outputs)
+
+        return ret_dict
 
     def _init_state(self, encoder_hidden):
         """ Initialize the encoder hidden state. """
@@ -178,7 +203,7 @@ class DecoderRNN(BaseRNN):
 
         # set default input and max decoding length
         if inputs is None:
-            inputs = torch.LongTensor([0] * batch_size).view(batch_size, 1)
+            inputs = device.LongTensor([0] * batch_size).view(batch_size, 1)
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
             max_length = self.max_length

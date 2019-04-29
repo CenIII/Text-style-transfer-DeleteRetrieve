@@ -11,6 +11,7 @@ class YelpDataset(Dataset):
 		super(YelpDataset, self).__init__()
 		self.dataPath = '../Data/longyelp/'
 		self.data,self.label,self.lengths = self.readData()
+		self.force_max_len = 200
 
 	def readData(self):
 		with open(os.path.join(self.dataPath,'train.pkl'),'rb') as f:
@@ -34,14 +35,19 @@ class YelpDataset(Dataset):
 	def collate_fn(self, batch):
 		batchSize = len(batch)
 		maxLen = 0
-		lengths = np.zeros(batchSize)
-		labels = np.zeros(batchSize)
+		lengths = np.zeros(batchSize, dtype=np.int)
+		labels = np.zeros(batchSize, dtype=np.int)
 		for i in range(batchSize):
 			labels[i] = batch[i][1]
-			lengths[i] = batch[i][2]
-		maxLen = np.max(lengths)
-		sents = np.zeros([batchSize,maxLen])
+			lengths[i] = min(self.force_max_len, batch[i][2])
+		maxLen = min(self.force_max_len, np.max(lengths))
+		sents = np.zeros([batchSize,maxLen], dtype=np.int)
 		for i in range(batchSize):
-			sents[i] = batch[i][0]
+			sents[i,:lengths[i]] = batch[i][0][:lengths[i]]
+
+		inds = np.argsort(-lengths)
+		sents = sents[inds]
+		labels = labels[inds]
+		lengths = lengths[inds]
 		return torch.LongTensor(sents), torch.LongTensor(labels), torch.LongTensor(lengths)
 
