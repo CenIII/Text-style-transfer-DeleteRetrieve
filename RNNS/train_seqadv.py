@@ -16,7 +16,7 @@ def makeInp(*inps):
 		ret.append(inp.to(device))
 	return ret
 
-def saveStateDict(seq2att,advclss):
+def saveStateDict(seq2att, advclss):
 	models = {}
 	models['seq2att'] = seq2att.state_dict()
 	models['advclss'] = advclss.state_dict()
