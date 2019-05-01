@@ -139,7 +139,7 @@ class DecoderRNN(BaseRNN):
                 lengths[update_idx] = len(decoder_outputs)
             return
 
-        def updateEncOutputs(encoder_outputs, step_attn):  # (batchsize,1,hiddensize) (batchsize,1,hiddensize)
+        def updateEncOutputsKeys(encoder_outputs, step_attn):  # (batchsize,1,hiddensize) (batchsize,1,hiddensize)
             encoder_outputs = encoder_outputs*(1-step_attn) # todo: is it correct?
             return encoder_outputs
 
