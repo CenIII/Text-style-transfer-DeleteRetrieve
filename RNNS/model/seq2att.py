@@ -202,7 +202,7 @@ class DecCriterion(nn.Module):
 		loss_reg = 0.
 		for i in range(batch_size):
 			loss_reg += self.reg_loss(attns[i,:out_lens[i]])
-
+		loss_reg = loss_reg/batch_size
 		return loss1, loss_reg #, loss2, loss3
 
 
