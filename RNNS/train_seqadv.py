@@ -40,7 +40,7 @@ def train(loader, net, advclss, crit1, crit2):
 				# backward, optim_seqdec.step()
 				net.zero_grad()
 				advclss.zero_grad()
-				loss1.backward()
+				loss1.backward(retain_graph=True)
 				optim_seqdec.step()
 				# net.zero_grad, advclss.zero_grad()
 				adv_orig_outs, _ = advclss(keys=enc_outs['enc_outputs_key'],hiddens=enc_outs['enc_outputs']) 
