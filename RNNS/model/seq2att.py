@@ -215,6 +215,8 @@ class AdvCriterion(nn.Module):
 		labels = labels.type(device.FloatTensor)
 		orig_outs, left_outs = advclss_outs
 		batch_size = len(orig_outs)
+		orig_outs = orig_outs.squeeze()
+		left_outs = left_outs.squeeze()
 		loss2_1 = -torch.sum((labels*torch.log(orig_outs+1e-18)+(1-labels)*torch.log(1-orig_outs+1e-18)))
 		loss2_2 = -torch.sum((labels*torch.log(left_outs+1e-18)+(1-labels)*torch.log(1-left_outs+1e-18)))
 		loss2 = (loss2_1+loss2_2)/(2*batch_size)
