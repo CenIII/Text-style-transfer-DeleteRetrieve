@@ -46,14 +46,14 @@ class YelpDataset(Dataset):
 			sents[i,:lengths[i]] = batch[i][0][:lengths[i]]
 
 		inds = np.argsort(-lengths)
-		sents = sents[inds]
-		labels = labels[inds]
-		lengths = lengths[inds]
+		sents = torch.LongTensor(sents[inds])
+		labels = torch.LongTensor(labels[inds])
+		lengths = torch.LongTensor(lengths[inds])
 		nonz = (lengths<=0).nonzero()
 		if len(nonz)>0:
 			ending = nonz[0][0]
 			sents = sents[:ending]
 			labels = labels[:ending]
 			lengths = lengths[:ending]
-		return torch.LongTensor(sents), torch.LongTensor(labels), torch.LongTensor(lengths)
+		return sents, labels, lengths
 
