@@ -54,9 +54,9 @@ class Attention(nn.Module):
             mask (torch.Tensor): tensor containing indices to be masked
         """
         batch_size = len(lengths)
-        mask = torch.zeros([batch_size,max_steps]).type(device.ByteTensor)
+        mask = torch.ones([batch_size,max_steps]).type(device.ByteTensor)
         for i in range(batch_size):
-            mask[i,:lengths[i]] = 1
+            mask[i,:lengths[i]] = 0
 
         self.mask = mask.unsqueeze(1)
 
