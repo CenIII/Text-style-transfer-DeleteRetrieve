@@ -29,8 +29,8 @@ class Seq2att(nn.Module):
 				embedding=embedding, update_embedding=False)
 		
 
-		self.linear_first = torch.nn.Linear(2048,1024)
-		self.linear_first.bias.data.fill_(0)
+		self.linear_first = nn.Linear(2048,1024,bias=False)
+		# self.linear_first.bias.data.fill_(0)
 
 		self.decoder = DecoderRNN(1, 30, 1024, n_layers=n_layers, 
 									rnn_cell=rnn_cell, bidirectional=bidirectional, use_attention=True) #int((hidden_size+style_size)*(bidirectional+1))
@@ -106,8 +106,8 @@ class AdvClassifier(nn.Module):
 
 		# self.linear_first = torch.nn.Linear(lstm_hid_dim,d_a)
 		# self.linear_first.bias.data.fill_(0)
-		self.linear_second = torch.nn.Linear(d_a,r)
-		self.linear_second.bias.data.fill_(0)
+		self.linear_second = nn.Linear(d_a,r,bias=False)
+		# self.linear_second.bias.data.fill_(0)
 		self.n_classes = n_classes
 		self.linear_final = torch.nn.Linear(lstm_hid_dim,self.n_classes)
 		self.batch_size = batch_size       
