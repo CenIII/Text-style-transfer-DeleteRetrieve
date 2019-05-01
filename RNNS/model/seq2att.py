@@ -6,6 +6,8 @@ from .DecoderRNN import DecoderRNN
 import pickle
 import numpy as np
 import os
+from functools import reduce
+
 if torch.cuda.is_available():
 	import torch.cuda as device
 else:

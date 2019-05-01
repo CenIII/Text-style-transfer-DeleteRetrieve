@@ -15,8 +15,6 @@ if torch.cuda.is_available():
 else:
     import torch as device
 
-from functools import reduce
-
 
 class DecoderRNN(BaseRNN):
     r"""
