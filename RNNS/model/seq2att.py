@@ -64,7 +64,7 @@ class Seq2att(nn.Module):
 		# todo: eo_l normalization?
 		
 
-		eh_ky_detach = (eh_ky[0].detach(),eh_ky[2].detach())
+		eh_ky_detach = (eh_ky[0].detach(),eh_ky[1].detach())
 		eo_ky_detach = eo_ky.detach()
 		eo_detach = eo.detach()
 		# todo: generated weight normalization?
