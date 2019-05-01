@@ -63,7 +63,7 @@ def train(loader, net, advclss, crit1, crit2):
 				advclss.linear_second.weight_g.data.fill_(1.)
 			max_out_len = max(dec_outs['length'])
 			qdar.set_postfix(loss1=lstr(loss1), loss_reg=lstr(loss_reg), loss2=lstr(loss2), max_out_len=max_out_len)
-		saveStateDict(net,advclss):
+		saveStateDict(net,advclss)
 		epoch += 1
 
 
