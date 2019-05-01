@@ -150,7 +150,7 @@ class DecoderRNN(BaseRNN):
                                                                      function=function, att_lengths=att_lengths ,advclss=advclss)
             step_output = decoder_output.squeeze(1)
             encoder_outputs_key = updateEncOutputsKeys(encoder_outputs_key, step_attn)
-            left_value = advclss(keys=encoder_outputs_key, hiddens=encoder_outputs)
+            left_value, _ = advclss(keys=encoder_outputs_key, hiddens=encoder_outputs)
             decode(di, step_output, step_attn, left_value)
             
 
