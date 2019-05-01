@@ -49,5 +49,11 @@ class YelpDataset(Dataset):
 		sents = sents[inds]
 		labels = labels[inds]
 		lengths = lengths[inds]
+		nonz = (lengths<=0).nonzero()
+		if len(nonz)>0:
+			ending = nonz[0][0]
+			sents = sents[:ending]
+			labels = labels[:ending]
+			lengths = lengths[:ending]
 		return torch.LongTensor(sents), torch.LongTensor(labels), torch.LongTensor(lengths)
 
