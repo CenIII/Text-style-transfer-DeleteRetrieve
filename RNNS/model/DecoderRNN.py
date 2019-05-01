@@ -87,7 +87,7 @@ class DecoderRNN(BaseRNN):
         # self.out = nn.Linear(2048, self.output_size)
 
 
-    def forward_step(self, input_var, hidden, encoder_outputs_key, encoder_outputs, function, advclss=None):
+    def forward_step(self, input_var, hidden, encoder_outputs_key, encoder_outputs, function, att_lengths=None, advclss=None):
         batch_size = input_var.size(0)
         output_size = input_var.size(1)
         embedded = torch.zeros([batch_size, 1, 300]) 
@@ -99,12 +99,13 @@ class DecoderRNN(BaseRNN):
         attn = None
         if self.use_attention:
             # todo: use part of encoder_outputs for att
+            self.attention.set_mask(att_lengths, encoder_outputs_key.shape[1])
             sent_emb, attn = self.attention(queries, encoder_outputs_key, encoder_outputs)
 
         predicted_score = advclss(sent_emb=sent_emb.contiguous().view(-1, 2048)).view(batch_size, output_size, -1) #function()
         return predicted_score, hidden, attn
 
-    def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None, encoder_outputs_key=None, advclss=None, labels=None,
+    def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None, encoder_outputs_key=None, advclss=None, att_lengths=None, labels=None,
                     function=F.sigmoid):
         ret_dict = dict()
         if self.use_attention:
@@ -146,7 +147,7 @@ class DecoderRNN(BaseRNN):
         decoder_input = inputs[:, 0].unsqueeze(1)
         for di in range(max_length):
             decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs_key, encoder_outputs,
-                                                                     function=function, advclss=advclss)
+                                                                     function=function, att_lengths=att_lengths ,advclss=advclss)
             step_output = decoder_output.squeeze(1)
             encoder_outputs_key = updateEncOutputsKeys(encoder_outputs_key, step_attn)
             left_value = advclss(keys=encoder_outputs_key, hiddens=encoder_outputs)

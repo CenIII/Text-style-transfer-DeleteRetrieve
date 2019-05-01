@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+if torch.cuda.is_available():
+    import torch.cuda as device
+else:
+    import torch as device
 
 class Attention(nn.Module):
     r"""
@@ -42,13 +46,18 @@ class Attention(nn.Module):
         # self.linear_out = nn.Linear(dim*2, dim)
         self.mask = None
 
-    def set_mask(self, mask):
+    def set_mask(self, lengths, max_steps):
         """
         Sets indices to be masked
 
         Args:
             mask (torch.Tensor): tensor containing indices to be masked
         """
+        batch_size = len(lengths)
+        mask = torch.zeros([batch_size,max_steps]).type(device.ByteTensor)
+        for i in range(batch_size):
+            mask[i,:lengths[i]] = 1
+            
         self.mask = mask
 
     def forward(self, output, keys, context):

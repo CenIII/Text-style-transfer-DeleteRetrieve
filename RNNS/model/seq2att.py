@@ -73,6 +73,7 @@ class Seq2att(nn.Module):
 								encoder_outputs_key=eo_ky_detach,
 								encoder_outputs=eo_detach,
 								advclss=advclss,
+								att_lengths=lengths,
 								labels=labels)
 		hiddens = {}
 		hiddens['enc_outputs'] = encoder_outputs
