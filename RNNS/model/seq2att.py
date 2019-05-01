@@ -45,7 +45,7 @@ class Seq2att(nn.Module):
 			leftAtt = reduce(do_mult, effAtts)
 
 			left_over.append(encoder_outputs[i]*(leftAtt.unsqueeze(1)))
-		left_over = torch.stack(left_over, dim=0).detach()  # todo: is it right to do detach?
+		left_over = torch.stack(left_over, dim=0)#.detach()  # todo: is it right to do detach?
 		return left_over
 
 	def forward(self, sents, labels, lengths, advclss):
@@ -56,28 +56,30 @@ class Seq2att(nn.Module):
 		'''
 		encoder_outputs, encoder_hidden = self.encoder(sents, lengths)
 		
-		eh_l_1 = F.tanh(self.linear_first(encoder_hidden[0]))       
-		eh_l_2 = F.tanh(self.linear_first(encoder_hidden[1])) 
-		eh_l = (eh_l_1,eh_l_2)
-		eo_l =  F.tanh(self.linear_first(encoder_outputs))
+		eh_ky_1 = F.tanh(self.linear_first(encoder_hidden[0]))       
+		eh_ky_2 = F.tanh(self.linear_first(encoder_hidden[1])) 
+		eh_ky = (eh_ky_1,eh_ky_2)
+		eo_ky =  F.tanh(self.linear_first(encoder_outputs))
 
 		# todo: eo_l normalization?
 		
 
-		eh_detach = (eh_l[0].detach(),eh_l[2].detach())
-		eo_detach = eo_l.detach()
-
+		eh_ky_detach = (eh_ky[0].detach(),eh_ky[2].detach())
+		eo_ky_detach = eo_ky.detach()
+		eo_detach = eo.detach()
 		# todo: generated weight normalization?
 		decoder_outs = self.decoder(inputs=None,
-								encoder_hidden=eh_detach,
+								encoder_hidden=eh_ky_detach,
+								encoder_outputs_key=eo_ky_detach,
 								encoder_outputs=eo_detach,
 								advclss=advclss,
 								labels=labels)
 		hiddens = {}
-		hiddens['enc_outputs'] = eo_l
+		hiddens['enc_outputs'] = encoder_outputs
+		hiddens['enc_outputs_key'] = eo_ky
 		hiddens['left_over'] = self.getLeftOver(ret_dict['attention_score'], 
 												ret_dict['length'], 
-												eo_l)
+												eo_ky)
 
 		return hiddens, decoder_outs
 
@@ -133,16 +135,18 @@ class AdvClassifier(nn.Module):
 		soft_max_nd = soft_max_2d.view(*trans_size)
 		return soft_max_nd.transpose(axis, len(input_size)-1)
 		
-	def forward(self,hiddens,is_sent_emb=False):   # enc_outs: left overs
-		if not is_sent_emb:
+	def forward(self,keys=None,hiddens=None,sent_emb=None):   # enc_outs: left overs
+		if sent_emb is None:
+			assert(keys is not None)
+			assert(hiddens is not None)
 			# x = F.tanh(self.linear_first(hiddens))       
-			x = self.linear_second(x)       
+			x = self.linear_second(keys)       
 			x = self.softmax(x,1)       
 			attention = x.transpose(1,2)
 			sent_emb = attention@hiddens
 			avg_sent_emb = torch.sum(sent_emb,1)/self.r
 		else:
-			avg_sent_emb = hiddens
+			avg_sent_emb = sent_emb
 		output = F.sigmoid(self.linear_final(avg_sent_emb))
 		return output,attention
 
