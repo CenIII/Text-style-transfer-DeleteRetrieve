@@ -68,7 +68,7 @@ class Seq2att(nn.Module):
 		eo_ky_detach = eo_ky.detach()
 		eo_detach = encoder_outputs.detach()
 		# todo: generated weight normalization?
-		decoder_outs = self.decoder(inputs=None,
+		ret_dict = self.decoder(inputs=None,
 								encoder_hidden=eh_ky_detach,
 								encoder_outputs_key=eo_ky_detach,
 								encoder_outputs=eo_detach,
@@ -82,7 +82,7 @@ class Seq2att(nn.Module):
 												ret_dict['length'], 
 												eo_ky)
 
-		return hiddens, decoder_outs
+		return hiddens, ret_dict
 
 
  
