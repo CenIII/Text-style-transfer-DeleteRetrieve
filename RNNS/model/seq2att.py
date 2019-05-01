@@ -197,7 +197,7 @@ class DecCriterion(nn.Module):
 		for i in range(batch_size):
 			mask[i,:out_lens[i]] = 1.
 		labels_rep = labels.unsqueeze(1).repeat(1,steps)
-		loss1 = -torch.sum((labels_rep*torch.log(scores+1e-18)+(1-labels_rep)*torch.log(1-scores+1e-18))*mask)/batch_size
+		loss1 = -torch.sum((labels_rep*torch.log(scores+1e-18)+(1-labels_rep)*torch.log(1-scores+1e-18))*mask)/(batch_size*torch.sum(mask))
 
 		loss_reg = 0.
 		for i in range(batch_size):
