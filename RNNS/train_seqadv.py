@@ -64,7 +64,7 @@ def train(loader, net, advclss, crit1, crit2):
 
 # init loader
 trainData = YelpDataset()
-ldTrain = DataLoader(trainData, batch_size=16, shuffle=True, num_workers=2, collate_fn=trainData.collate_fn)
+ldTrain = DataLoader(trainData, batch_size=64, shuffle=True, num_workers=2, collate_fn=trainData.collate_fn)
 
 # init seq2att net
 seq2att = Seq2att(hidden_size=2048, style_size=100, input_dropout_p=0, 
