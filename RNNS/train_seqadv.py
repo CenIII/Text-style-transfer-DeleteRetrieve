@@ -16,6 +16,12 @@ def makeInp(*inps):
 		ret.append(inp.to(device))
 	return ret
 
+def saveStateDict(seq2att,advclss):
+	models = {}
+	models['seq2att'] = seq2att.state_dict()
+	models['advclss'] = advclss.state_dict()
+	torch.save(models, './seq2att.pt')
+
 def train(loader, net, advclss, crit1, crit2):
 	print('start to train...')
 	optim_seqdec = torch.optim.Adam(list(filter(lambda p: p.requires_grad, net.decoder.parameters())), 0.0001)
@@ -54,11 +60,9 @@ def train(loader, net, advclss, crit1, crit2):
 				loss2.backward()
 				optim_adv.step()
 				advclss.linear_second.weight_g.data.fill_(1.)
-
 			max_out_len = max(dec_outs['length'])
-
 			qdar.set_postfix(loss1=lstr(loss1), loss_reg=lstr(loss_reg), loss2=lstr(loss2), max_out_len=max_out_len)
-
+		saveStateDict(net,advclss):
 		epoch += 1
 
 
