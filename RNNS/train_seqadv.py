@@ -69,7 +69,7 @@ seq2att = Seq2att(hidden_size=2048, style_size=100, input_dropout_p=0,
 					max_len=200, dropout_p=0, n_layers=1, bidirectional=False, 
 					rnn_cell='lstm', decode_function=F.sigmoid).to(device)
 # init adv classifier
-advclss = AdvClassifier(16,2048,512,1,n_classes=1).to(device)
+advclss = AdvClassifier(16,2048,1024,1,n_classes=1).to(device)
 
 # init crit 
 crit1 = DecCriterion().to(device)
