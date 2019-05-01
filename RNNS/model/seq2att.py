@@ -178,7 +178,7 @@ class DecCriterion(nn.Module):
 	def reg_loss(self,attn):
 		if len(attn)>0:
 			hops = len(attn)
-			mat = attn.mm(attn.transpose(0,1))-device.eye(hops)
+			mat = attn.mm(attn.transpose(0,1))-torch.eye(hops).type(device.FloatTensor)
 			return self.l2_matrix_norm(mat)
 		else:
 			return 0.
