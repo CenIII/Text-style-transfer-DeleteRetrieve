@@ -173,7 +173,7 @@ class DecCriterion(nn.Module):
 			regularized value
 	   
 		"""
-		return torch.sum(torch.sum(torch.sum(m**2,1),1)**0.5).type(device.FloatTensor)
+		return torch.sum(m**2)**0.5.type(device.FloatTensor)
 
 	def reg_loss(self,attn):
 		if len(attn)>1:
