@@ -218,11 +218,12 @@ class AdvCriterion(nn.Module):
 		super(AdvCriterion, self).__init__()
 
 	def forward(self, advclss_outs, labels):
+		labels = labels.type(device.FloatTensor)
 		orig_outs, left_outs = advclss_outs
 		batch_size = len(orig_outs)
-		loss2_1 = -torch.sum((labels*torch.log(orig_outs+1e-18)+(1-labels)*torch.log(1-orig_outs+1e-18)))/batch_size
-		loss2_2 = -torch.sum((labels*torch.log(left_outs+1e-18)+(1-labels)*torch.log(1-left_outs+1e-18)))/batch_size
-		loss2 = loss2_1+loss2_2
+		loss2_1 = -torch.sum((labels*torch.log(orig_outs+1e-18)+(1-labels)*torch.log(1-orig_outs+1e-18)))
+		loss2_2 = -torch.sum((labels*torch.log(left_outs+1e-18)+(1-labels)*torch.log(1-left_outs+1e-18)))
+		loss2 = (loss2_1+loss2_2)/(2*batch_size)
 		return loss2
 
 
