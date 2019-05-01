@@ -57,8 +57,8 @@ class Attention(nn.Module):
         mask = torch.zeros([batch_size,max_steps]).type(device.ByteTensor)
         for i in range(batch_size):
             mask[i,:lengths[i]] = 1
-            
-        self.mask = mask
+
+        self.mask = mask.unsqueeze(1)
 
     def forward(self, output, keys, context):
         batch_size = output.size(0)
