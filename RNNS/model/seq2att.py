@@ -175,39 +175,9 @@ class DecCriterion(nn.Module):
 		labels_rep = labels.unsqueeze(1).repeat(1,steps)
 		loss1 = -torch.sum((labels_rep*torch.log(scores+1e-18)+(1-labels_rep)*torch.log(1-scores+1e-18))*mask)/batch_size
 
-		# def checkFirmPreds(scores,margin=0.05):
-		# 	tmp = (torch.zeros(len(scores))-1.).type(device.FloatTensor)
-		# 	tmp1 = 2*(scores>(0.5+margin)).type(device.FloatTensor).squeeze()
-		# 	tmp2 = (scores<(0.5-margin)).type(device.FloatTensor).squeeze()
-		# 	tmp = tmp+tmp1+tmp2
-		# 	return tmp
-
-		# # part 2: if advclss_outs agree with labels (>0.52), sup on last step of seq2att, also sup on the last att of seq2att
-		# adv_scores, adv_attn = advclss_outs  # (16,1), (16,1,204)
-		# adv_labels = checkFirmPreds(adv_scores)
-		# agree_mask = adv_labels.data.eq(labels.data)
-
-		# 	# find index of 1 in agree mask
-		# active_indices = (agree_mask != 0).nonzero().squeeze()
-		# 	# gather target scores, attns
-		# ac_scores = scores[active_indices].view(-1,steps)
-		# ac_attns = attns[active_indices].view(-1,steps,max_len)
-		# ac_out_lens = out_lens[active_indices].view(-1)
-
-		# assert(len(ac_out_lens)==len(active_indices))
-		# loss2 = 0.
-		# if len(ac_out_lens)>=1:
-		# 	ac_scores = ac_scores.gather(1,(ac_out_lens-1).unsqueeze(1))
-		# 	ac_attns = ac_attns.gather(1,(ac_out_lens-1).unsqueeze(1).unsqueeze(2).repeat(1,1,max_len))
-		# 	# calc loss
-		# 	ac_adv_scores = labels[active_indices] #adv_scores[active_indices]
-		# 	ac_adv_attn = adv_attn[active_indices]
-		# 	loss2_1 = -torch.sum((ac_adv_scores*torch.log(ac_scores+1e-18)+(1 - ac_adv_scores)*torch.log(1-ac_scores+1e-18)))/len(active_indices)
-		# 	loss2_2 = torch.sum((ac_adv_attn - ac_attns)**2)/len(active_indices)
-		# 	loss2 = loss2_1+loss2_2
-
-		# part 3: don't forget to train advclss
-		# loss3 = -torch.sum((labels*torch.log(adv_scores+1e-18)+(1-labels)*torch.log(1-adv_scores+1e-18)))/batch_size
+		loss_reg = 0.
+		
+		
 
 		return loss1#, loss2, loss3
 
