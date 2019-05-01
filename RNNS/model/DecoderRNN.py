@@ -102,7 +102,7 @@ class DecoderRNN(BaseRNN):
             self.attention.set_mask(att_lengths, encoder_outputs_key.shape[1])
             sent_emb, attn = self.attention(queries, encoder_outputs_key, encoder_outputs)
 
-        predicted_score = advclss(sent_emb=sent_emb.contiguous().view(-1, 2048)).view(batch_size, output_size, -1) #function()
+        predicted_score = advclss(sent_emb=sent_emb.contiguous().view(-1, 2048))[0].view(batch_size, output_size, -1) #function()
         return predicted_score, hidden, attn
 
     def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None, encoder_outputs_key=None, advclss=None, att_lengths=None, labels=None,
