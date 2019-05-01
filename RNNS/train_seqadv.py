@@ -34,17 +34,17 @@ def train(loader, net, advclss, crit1, crit2):
 		for itr in qdar: 
 			sents, labels, lengths = makeInp(*next(ld))
 			with torch.set_grad_enabled(True):
-				seq2att_outs = net(sents, labels, lengths, advclss)  # outputs: score array, out lengths, att matrix, enc out left over
+				enc_outs, dec_outs = net(sents, labels, lengths, advclss)  # outputs: score array, out lengths, att matrix, enc out left over
 				# crit 1: binary cross entropy on carried steps
-				loss1 = crit1(seq2att_outs['score'],labels)
+				loss1 = crit1(dec_outs['score'],labels)
 				# backward, optim_seqdec.step()
 				net.zero_grad()
 				advclss.zero_grad()
 				loss1.backward()
 				optim_seqdec.step()
 				# net.zero_grad, advclss.zero_grad()
-				adv_orig_outs = advclss(key=seq2att_outs['enc_outputs_key'],hiddens=seq2att_outs['enc_outputs']) 
-				adv_left_outs = advclss(key=seq2att_outs['left_over_key'],hiddens=seq2att_outs['enc_outputs']) 
+				adv_orig_outs = advclss(key=enc_outs['enc_outputs_key'],hiddens=enc_outs['enc_outputs']) 
+				adv_left_outs = advclss(key=enc_outs['left_over_key'],hiddens=enc_outs['enc_outputs']) 
 				# crit 2: binary cross entropy on adv results
 				loss2 = crit2([adv_orig_outs,adv_left_outs], labels)
 				# backward, optim_adv
@@ -53,7 +53,7 @@ def train(loader, net, advclss, crit1, crit2):
 				loss2.backward()
 				optim_adv.step()
 
-			max_out_len = max(seq2att_outs['length'])
+			max_out_len = max(dec_outs['length'])
 
 			qdar.set_postfix(loss1=lstr(loss1),loss2=lstr(loss2),max_out_len=max_out_len)
 
