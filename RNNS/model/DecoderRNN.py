@@ -127,7 +127,7 @@ class DecoderRNN(BaseRNN):
             tmp2 = (1-labels) & left_value.data.ge(0.5-self.MARGIN).type(device.LongTensor).squeeze()
             return (tmp1+tmp2).unsqueeze(1)
             
-        def checkAdvEOS(left_value,labels):
+        def checkAdvEOS(step, left_value, labels):
             eos_batches = getEOS(left_value, labels)
             if eos_batches.dim() > 0:
                 eos_batches = eos_batches.cpu().view(-1).numpy()
@@ -135,7 +135,7 @@ class DecoderRNN(BaseRNN):
                 lengths[update_idx] = len(decoder_outputs)
             return
 
-        def decode(step, step_output, step_attn):
+        def decode(step_output, step_attn):
             decoder_outputs.append(step_output)
             if self.use_attention:
                 ret_dict[DecoderRNN.KEY_ATTN_SCORE].append(step_attn)
@@ -149,12 +149,12 @@ class DecoderRNN(BaseRNN):
         decoder_input = inputs[:, 0].unsqueeze(1)
         for di in range(max_length):
             left_value, _ = advclss(keys=encoder_outputs_key, hiddens=encoder_outputs)
-            checkAdvEOS(left_value,labels)
+            checkAdvEOS(di, left_value, labels)
             decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs_key, encoder_outputs,
                                                                      function=function, att_lengths=att_lengths ,advclss=advclss)
             step_output = decoder_output.squeeze(1)
             encoder_outputs_key = updateEncOutputsKeys(encoder_outputs_key, step_attn)
-            decode(di, step_output, step_attn)
+            decode(step_output, step_attn)
             
 
         ret_dict[DecoderRNN.KEY_SCORE] = decoder_outputs
