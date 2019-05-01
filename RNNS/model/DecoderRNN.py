@@ -140,7 +140,7 @@ class DecoderRNN(BaseRNN):
             return
 
         def updateEncOutputsKeys(encoder_outputs, step_attn):  # (batchsize,1,hiddensize) (batchsize,1,hiddensize)
-            encoder_outputs = encoder_outputs*(1-step_attn) # todo: is it correct?
+            encoder_outputs = encoder_outputs*(1-step_attn.transpose(1,2)) # todo: is it correct?
             return encoder_outputs
 
         # Manual unrolling is used to support random teacher forcing.
