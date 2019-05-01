@@ -37,7 +37,7 @@ def train(loader, net, advclss, crit1, crit2):
 			with torch.set_grad_enabled(True):
 				enc_outs, dec_outs = net(sents, labels, lengths, advclss)  # outputs: score array, out lengths, att matrix, enc out left over
 				# crit 1: binary cross entropy on carried steps
-				loss1 = crit1(dec_outs,labels)
+				loss1, loss_reg = crit1(dec_outs,labels)
 				# backward, optim_seqdec.step()
 				net.zero_grad()
 				advclss.zero_grad()
@@ -57,7 +57,7 @@ def train(loader, net, advclss, crit1, crit2):
 
 			max_out_len = max(dec_outs['length'])
 
-			qdar.set_postfix(loss1=lstr(loss1),loss2=lstr(loss2),max_out_len=max_out_len)
+			qdar.set_postfix(loss1=lstr(loss1), loss_reg=lstr(loss_reg), loss2=lstr(loss2), max_out_len=max_out_len)
 
 		epoch += 1
 

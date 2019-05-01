@@ -159,6 +159,28 @@ class DecCriterion(nn.Module):
 	"""docstring for Criterion"""
 	def __init__(self):
 		super(DecCriterion, self).__init__()
+
+	def l2_matrix_norm(self,m):
+		"""
+		Frobenius norm calculation
+ 
+		Args:
+		   m: {Variable} ||AAT - I||
+ 
+		Returns:
+			regularized value
+	   
+		"""
+		return torch.sum(torch.sum(torch.sum(m**2,1),1)**0.5).type(device.DoubleTensor)
+
+	def reg_loss(self,attn):
+		if len(attn)>0:
+			hops = len(attn)
+			mat = attn.mm(attn.transpose(0,1))-device.eye(hops)
+			return self.l2_matrix_norm(mat)
+		else:
+			return 0.
+
 	
 	def forward(self, seq2att_outs, labels):
 		labels = labels.type(device.FloatTensor)
@@ -171,15 +193,15 @@ class DecCriterion(nn.Module):
 		max_len = attns.shape[2]
 		mask = torch.zeros_like(scores)
 		for i in range(batch_size):
-			mask[i,:(out_lens[i]-1)] = 1.
+			mask[i,:out_lens[i]] = 1.
 		labels_rep = labels.unsqueeze(1).repeat(1,steps)
 		loss1 = -torch.sum((labels_rep*torch.log(scores+1e-18)+(1-labels_rep)*torch.log(1-scores+1e-18))*mask)/batch_size
 
 		loss_reg = 0.
-		
-		
+		for i in range(batch_size):
+			loss_reg += self.reg_loss(attns[i,:out_lens[i]])
 
-		return loss1#, loss2, loss3
+		return loss1, loss_reg #, loss2, loss3
 
 
 class AdvCriterion(nn.Module):
