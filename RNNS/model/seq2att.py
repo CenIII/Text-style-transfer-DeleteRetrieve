@@ -173,10 +173,10 @@ class DecCriterion(nn.Module):
 			regularized value
 	   
 		"""
-		return torch.sum(torch.sum(torch.sum(m**2,1),1)**0.5).type(device.DoubleTensor)
+		return torch.sum(torch.sum(torch.sum(m**2,1),1)**0.5).type(device.FloatTensor)
 
 	def reg_loss(self,attn):
-		if len(attn)>0:
+		if len(attn)>1:
 			hops = len(attn)
 			mat = attn.mm(attn.transpose(0,1))-torch.eye(hops).type(device.FloatTensor)
 			return self.l2_matrix_norm(mat)
