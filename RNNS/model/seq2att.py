@@ -44,9 +44,11 @@ class Seq2att(nn.Module):
 		left_over = [] # should be 16x463
 		def do_mult(x1, x2): return x1 * x2
 		for i in range(batchSize):
+			if out_lens[i]==0:
+				left_over.append(encoder_outputs[i])
+				continue
 			effAtts = 1. - attns[i,:out_lens[i]]
 			leftAtt = reduce(do_mult, effAtts)
-
 			left_over.append(encoder_outputs[i]*(leftAtt.unsqueeze(1)))
 		left_over = torch.stack(left_over, dim=0)#.detach()  # todo: is it right to do detach?
 		return left_over
