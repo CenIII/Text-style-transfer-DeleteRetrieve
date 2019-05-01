@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import tqdm
 import numpy as np
 
+
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 def makeInp(*inps):
@@ -52,6 +53,7 @@ def train(loader, net, advclss, crit1, crit2):
 				advclss.zero_grad()
 				loss2.backward()
 				optim_adv.step()
+				advclss.linear_second.weight_g.data.fill_(1.)
 
 			max_out_len = max(dec_outs['length'])
 

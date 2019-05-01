@@ -7,6 +7,7 @@ import pickle
 import numpy as np
 import os
 from functools import reduce
+from torch.nn.utils import weight_norm
 
 if torch.cuda.is_available():
 	import torch.cuda as device
@@ -61,10 +62,8 @@ class Seq2att(nn.Module):
 		eh_ky_1 = F.tanh(self.linear_first(encoder_hidden[0]))       
 		eh_ky_2 = F.tanh(self.linear_first(encoder_hidden[1])) 
 		eh_ky = (eh_ky_1,eh_ky_2)
-		eo_ky =  F.tanh(self.linear_first(encoder_outputs))
-
-		# todo: eo_l normalization?
-		
+		# todo: eo_ky normalization?
+		eo_ky =  F.normalize(F.tanh(self.linear_first(encoder_outputs)),dim=2)
 
 		eh_ky_detach = (eh_ky[0].detach(),eh_ky[1].detach())
 		eo_ky_detach = eo_ky.detach()
@@ -109,10 +108,11 @@ class AdvClassifier(nn.Module):
 
 		# self.linear_first = torch.nn.Linear(lstm_hid_dim,d_a)
 		# self.linear_first.bias.data.fill_(0)
-		self.linear_second = nn.Linear(d_a,r,bias=False)
+		self.linear_second = weight_norm(nn.Linear(d_a,r,bias=False), name='weight')
+		self.linear_second.weight_g.data.fill_(1.)
 		# self.linear_second.bias.data.fill_(0)
 		self.n_classes = n_classes
-		self.linear_final = torch.nn.Linear(lstm_hid_dim,self.n_classes)
+		self.linear_final = nn.Linear(lstm_hid_dim,self.n_classes)
 		self.batch_size = batch_size       
 		self.lstm_hid_dim = lstm_hid_dim
 		self.r = r

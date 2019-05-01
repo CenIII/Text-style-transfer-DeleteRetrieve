@@ -93,6 +93,8 @@ class DecoderRNN(BaseRNN):
             embedded = embedded.cuda()
 
         queries, hidden = self.rnn(embedded, hidden)
+        # query normalization
+        queries = F.normalize(queries,dim=2)
 
         attn = None
         if self.use_attention:
