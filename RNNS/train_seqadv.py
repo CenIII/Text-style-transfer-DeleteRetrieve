@@ -36,7 +36,7 @@ def train(loader, net, advclss, crit1, crit2):
 			with torch.set_grad_enabled(True):
 				enc_outs, dec_outs = net(sents, labels, lengths, advclss)  # outputs: score array, out lengths, att matrix, enc out left over
 				# crit 1: binary cross entropy on carried steps
-				loss1 = crit1(dec_outs['score'],labels)
+				loss1 = crit1(dec_outs,labels)
 				# backward, optim_seqdec.step()
 				net.zero_grad()
 				advclss.zero_grad()
