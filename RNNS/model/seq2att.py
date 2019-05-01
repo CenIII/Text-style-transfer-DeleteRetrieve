@@ -77,7 +77,7 @@ class Seq2att(nn.Module):
 		hiddens = {}
 		hiddens['enc_outputs'] = encoder_outputs
 		hiddens['enc_outputs_key'] = eo_ky
-		hiddens['left_over'] = self.getLeftOver(ret_dict['attention_score'], 
+		hiddens['left_over_key'] = self.getLeftOver(ret_dict['attention_score'], 
 												ret_dict['length'], 
 												eo_ky)
 

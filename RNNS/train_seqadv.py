@@ -18,7 +18,7 @@ def makeInp(*inps):
 def train(loader, net, advclss, crit1, crit2):
 	print('start to train...')
 	optim_seqdec = torch.optim.Adam(list(filter(lambda p: p.requires_grad, net.decoder.parameters())), 0.0001)
-	optim_adv = torch.optim.Adam(list(filter(lambda p: p.requires_grad, net.encoder.parameters()))+list(advclss.parameters()), 0.0001)
+	optim_adv = torch.optim.Adam(list(filter(lambda p: p.requires_grad, net.encoder.parameters()))+list(net.linear_first.parameters())+list(advclss.parameters()), 0.0001)
 	# train
 	def lstr(lss):
 		return str(np.round(np.float(lss),3))
@@ -43,8 +43,8 @@ def train(loader, net, advclss, crit1, crit2):
 				loss1.backward()
 				optim_seqdec.step()
 				# net.zero_grad, advclss.zero_grad()
-				adv_orig_outs = advclss(seq2att_outs['enc_outputs']) 
-				adv_left_outs = advclss(seq2att_outs['left_over']) 
+				adv_orig_outs = advclss(key=seq2att_outs['enc_outputs_key'],hiddens=seq2att_outs['enc_outputs']) 
+				adv_left_outs = advclss(key=seq2att_outs['left_over_key'],hiddens=seq2att_outs['enc_outputs']) 
 				# crit 2: binary cross entropy on adv results
 				loss2 = crit2([adv_orig_outs,adv_left_outs], labels)
 				# backward, optim_adv
