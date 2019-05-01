@@ -7,9 +7,9 @@ import pickle
 import numpy as np
 import os
 if torch.cuda.is_available():
-    import torch.cuda as device
+	import torch.cuda as device
 else:
-    import torch as device
+	import torch as device
 
 class Seq2att(nn.Module):
 	def __init__(self, hidden_size=2048, style_size=100, input_dropout_p=0, max_len=200, dropout_p=0, n_layers=1, bidirectional=False, rnn_cell='lstm', decode_function=F.sigmoid):
@@ -30,23 +30,23 @@ class Seq2att(nn.Module):
 		
 
 		self.linear_first = torch.nn.Linear(2048,1024)
-        self.linear_first.bias.data.fill_(0)
+		self.linear_first.bias.data.fill_(0)
 
 		self.decoder = DecoderRNN(1, 30, 1024, n_layers=n_layers, 
 									rnn_cell=rnn_cell, bidirectional=bidirectional, use_attention=True) #int((hidden_size+style_size)*(bidirectional+1))
 
-    def getLeftOver(self, attns, out_lens, encoder_outputs):
-        attns = torch.cat(attns,dim=1) # (batchSize, steps, numHiddens)  [16, 30, 463]
-        batchSize, _, numHiddens = attns.shape
-        left_over = [] # should be 16x463
-        def do_mult(x1, x2): return x1 * x2
-        for i in range(batchSize):
-            effAtts = 1. - attns[i,:out_lens[i]]
-            leftAtt = reduce(do_mult, effAtts)
+	def getLeftOver(self, attns, out_lens, encoder_outputs):
+		attns = torch.cat(attns,dim=1) # (batchSize, steps, numHiddens)  [16, 30, 463]
+		batchSize, _, numHiddens = attns.shape
+		left_over = [] # should be 16x463
+		def do_mult(x1, x2): return x1 * x2
+		for i in range(batchSize):
+			effAtts = 1. - attns[i,:out_lens[i]]
+			leftAtt = reduce(do_mult, effAtts)
 
-            left_over.append(encoder_outputs[i]*(leftAtt.unsqueeze(1)))
-        left_over = torch.stack(left_over, dim=0).detach()  # todo: is it right to do detach?
-        return left_over
+			left_over.append(encoder_outputs[i]*(leftAtt.unsqueeze(1)))
+		left_over = torch.stack(left_over, dim=0).detach()  # todo: is it right to do detach?
+		return left_over
 
 	def forward(self, sents, labels, lengths, advclss):
 		'''
@@ -84,67 +84,67 @@ class Seq2att(nn.Module):
 
  
 class AdvClassifier(nn.Module):
-    """
-    The class is an implementation of the paper A Structured Self-Attentive Sentence Embedding including regularization
-    and without pruning. Slight modifications have been done for speedup
-    """
+	"""
+	The class is an implementation of the paper A Structured Self-Attentive Sentence Embedding including regularization
+	and without pruning. Slight modifications have been done for speedup
+	"""
    
-    def __init__(self,batch_size,lstm_hid_dim,d_a,r,n_classes = 1):
-        """
-        Initializes parameters suggested in paper
+	def __init__(self,batch_size,lstm_hid_dim,d_a,r,n_classes = 1):
+		"""
+		Initializes parameters suggested in paper
  
-        Args:
-            batch_size  : {int} batch_size used for training
-            lstm_hid_dim: {int} hidden dimension for lstm
-            d_a         : {int} hidden dimension for the dense layer
-            r           : {int} attention-hops or attention heads
-            n_classes   : {int} number of classes
-        """
-        super(AdvClassifier,self).__init__()
+		Args:
+			batch_size  : {int} batch_size used for training
+			lstm_hid_dim: {int} hidden dimension for lstm
+			d_a         : {int} hidden dimension for the dense layer
+			r           : {int} attention-hops or attention heads
+			n_classes   : {int} number of classes
+		"""
+		super(AdvClassifier,self).__init__()
 
-        # self.linear_first = torch.nn.Linear(lstm_hid_dim,d_a)
-        # self.linear_first.bias.data.fill_(0)
-        self.linear_second = torch.nn.Linear(d_a,r)
-        self.linear_second.bias.data.fill_(0)
-        self.n_classes = n_classes
-        self.linear_final = torch.nn.Linear(lstm_hid_dim,self.n_classes)
-        self.batch_size = batch_size       
-        self.lstm_hid_dim = lstm_hid_dim
-        self.r = r
-       
-        
-    def softmax(self,input, axis=1):
-        """
-        Softmax applied to axis=n
+		# self.linear_first = torch.nn.Linear(lstm_hid_dim,d_a)
+		# self.linear_first.bias.data.fill_(0)
+		self.linear_second = torch.nn.Linear(d_a,r)
+		self.linear_second.bias.data.fill_(0)
+		self.n_classes = n_classes
+		self.linear_final = torch.nn.Linear(lstm_hid_dim,self.n_classes)
+		self.batch_size = batch_size       
+		self.lstm_hid_dim = lstm_hid_dim
+		self.r = r
+	   
+		
+	def softmax(self,input, axis=1):
+		"""
+		Softmax applied to axis=n
  
-        Args:
-           input: {Tensor,Variable} input on which softmax is to be applied
-           axis : {int} axis on which softmax is to be applied
+		Args:
+		   input: {Tensor,Variable} input on which softmax is to be applied
+		   axis : {int} axis on which softmax is to be applied
  
-        Returns:
-            softmaxed tensors
-       
-        """
-        input_size = input.size()
-        trans_input = input.transpose(axis, len(input_size)-1)
-        trans_size = trans_input.size()
-        input_2d = trans_input.contiguous().view(-1, trans_size[-1])
-        soft_max_2d = F.softmax(input_2d,dim=1)
-        soft_max_nd = soft_max_2d.view(*trans_size)
-        return soft_max_nd.transpose(axis, len(input_size)-1)
-        
-    def forward(self,hiddens,is_sent_emb=False):   # enc_outs: left overs
-        if not is_sent_emb:
-	        # x = F.tanh(self.linear_first(hiddens))       
-	        x = self.linear_second(x)       
-	        x = self.softmax(x,1)       
-	        attention = x.transpose(1,2)
-        	sent_emb = attention@hiddens
-        	avg_sent_emb = torch.sum(sent_emb,1)/self.r
-        else:
-        	avg_sent_emb = hiddens
-        output = F.sigmoid(self.linear_final(avg_sent_emb))
-        return output,attention
+		Returns:
+			softmaxed tensors
+	   
+		"""
+		input_size = input.size()
+		trans_input = input.transpose(axis, len(input_size)-1)
+		trans_size = trans_input.size()
+		input_2d = trans_input.contiguous().view(-1, trans_size[-1])
+		soft_max_2d = F.softmax(input_2d,dim=1)
+		soft_max_nd = soft_max_2d.view(*trans_size)
+		return soft_max_nd.transpose(axis, len(input_size)-1)
+		
+	def forward(self,hiddens,is_sent_emb=False):   # enc_outs: left overs
+		if not is_sent_emb:
+			# x = F.tanh(self.linear_first(hiddens))       
+			x = self.linear_second(x)       
+			x = self.softmax(x,1)       
+			attention = x.transpose(1,2)
+			sent_emb = attention@hiddens
+			avg_sent_emb = torch.sum(sent_emb,1)/self.r
+		else:
+			avg_sent_emb = hiddens
+		output = F.sigmoid(self.linear_final(avg_sent_emb))
+		return output,attention
 
 
 class DecCriterion(nn.Module):
@@ -228,4 +228,4 @@ class AdvCriterion(nn.Module):
 
 			
 
-       
+	   
