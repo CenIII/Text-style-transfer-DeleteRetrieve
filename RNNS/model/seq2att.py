@@ -27,24 +27,59 @@ class Seq2att(nn.Module):
 		self.encoder = EncoderRNN(vocab_size, max_len, hidden_size, 
 				input_dropout_p=input_dropout_p, dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=rnn_cell, variable_lengths=True,
 				embedding=embedding, update_embedding=False)
-		self.style_emb = nn.Embedding(2,style_size)
-		self.decoder = DecoderRNN(1, 30, int((hidden_size+style_size)*(bidirectional+1)), n_layers=n_layers, 
-									rnn_cell=rnn_cell, bidirectional=bidirectional, use_attention=True)
+		
 
-	def forward(self, sents, labels, lengths):
+		self.linear_first = torch.nn.Linear(2048,1024)
+        self.linear_first.bias.data.fill_(0)
+
+		self.decoder = DecoderRNN(1, 30, 1024, n_layers=n_layers, 
+									rnn_cell=rnn_cell, bidirectional=bidirectional, use_attention=True) #int((hidden_size+style_size)*(bidirectional+1))
+
+    def getLeftOver(self, attns, out_lens, encoder_outputs):
+        attns = torch.cat(attns,dim=1) # (batchSize, steps, numHiddens)  [16, 30, 463]
+        batchSize, _, numHiddens = attns.shape
+        left_over = [] # should be 16x463
+        def do_mult(x1, x2): return x1 * x2
+        for i in range(batchSize):
+            effAtts = 1. - attns[i,:out_lens[i]]
+            leftAtt = reduce(do_mult, effAtts)
+
+            left_over.append(encoder_outputs[i]*(leftAtt.unsqueeze(1)))
+        left_over = torch.stack(left_over, dim=0).detach()  # todo: is it right to do detach?
+        return left_over
+
+	def forward(self, sents, labels, lengths, advclss):
 		'''
 		inputs: sents, labels, lengths
 
 		outputs: score array, out lengths, att matrix, enc out left over
 		'''
 		encoder_outputs, encoder_hidden = self.encoder(sents, lengths)
-		style_embedding = self.style_emb(labels)
-		ret_dict = self.decoder(inputs=None,
-								style_embd=style_embedding,
-								encoder_hidden=encoder_hidden,
-								encoder_outputs=encoder_outputs,
+		
+		eh_l_1 = F.tanh(self.linear_first(encoder_hidden[0]))       
+		eh_l_2 = F.tanh(self.linear_first(encoder_hidden[1])) 
+		eh_l = (eh_l_1,eh_l_2)
+		eo_l =  F.tanh(self.linear_first(encoder_outputs))
+
+		# todo: eo_l normalization?
+		
+
+		eh_detach = (eh_l[0].detach(),eh_l[2].detach())
+		eo_detach = eo_l.detach()
+
+		# todo: generated weight normalization?
+		decoder_outs = self.decoder(inputs=None,
+								encoder_hidden=eh_detach,
+								encoder_outputs=eo_detach,
+								advclss=advclss,
 								labels=labels)
-		return ret_dict
+		hiddens = {}
+		hiddens['enc_outputs'] = eo_l
+		hiddens['left_over'] = self.getLeftOver(ret_dict['attention_score'], 
+												ret_dict['length'], 
+												eo_l)
+
+		return hiddens, decoder_outs
 
 
  
@@ -67,8 +102,8 @@ class AdvClassifier(nn.Module):
         """
         super(AdvClassifier,self).__init__()
 
-        self.linear_first = torch.nn.Linear(lstm_hid_dim,d_a)
-        self.linear_first.bias.data.fill_(0)
+        # self.linear_first = torch.nn.Linear(lstm_hid_dim,d_a)
+        # self.linear_first.bias.data.fill_(0)
         self.linear_second = torch.nn.Linear(d_a,r)
         self.linear_second.bias.data.fill_(0)
         self.n_classes = n_classes
@@ -98,23 +133,26 @@ class AdvClassifier(nn.Module):
         soft_max_nd = soft_max_2d.view(*trans_size)
         return soft_max_nd.transpose(axis, len(input_size)-1)
         
-    def forward(self,left_over):   # enc_outs: left overs
-        x = F.tanh(self.linear_first(left_over))       
-        x = self.linear_second(x)       
-        x = self.softmax(x,1)       
-        attention = x.transpose(1,2)       
-        sentence_embeddings = attention@left_over       
-        avg_sentence_embeddings = torch.sum(sentence_embeddings,1)/self.r
-        output = F.sigmoid(self.linear_final(avg_sentence_embeddings))
+    def forward(self,hiddens,is_sent_emb=False):   # enc_outs: left overs
+        if not is_sent_emb:
+	        # x = F.tanh(self.linear_first(hiddens))       
+	        x = self.linear_second(x)       
+	        x = self.softmax(x,1)       
+	        attention = x.transpose(1,2)
+        	sent_emb = attention@hiddens
+        	avg_sent_emb = torch.sum(sent_emb,1)/self.r
+        else:
+        	avg_sent_emb = hiddens
+        output = F.sigmoid(self.linear_final(avg_sent_emb))
         return output,attention
 
 
-class Criterion(nn.Module):
+class DecCriterion(nn.Module):
 	"""docstring for Criterion"""
 	def __init__(self):
-		super(Criterion, self).__init__()
+		super(DecCriterion, self).__init__()
 	
-	def forward(self, seq2att_outs, advclss_outs, labels):
+	def forward(self, seq2att_outs, labels):
 		labels = labels.type(device.FloatTensor)
 		attns = torch.cat(seq2att_outs['attention_score'],1) #(16,30,204)
 		out_lens = device.LongTensor(seq2att_outs['length'])
@@ -129,43 +167,55 @@ class Criterion(nn.Module):
 		labels_rep = labels.unsqueeze(1).repeat(1,steps)
 		loss1 = -torch.sum((labels_rep*torch.log(scores+1e-18)+(1-labels_rep)*torch.log(1-scores+1e-18))*mask)/batch_size
 
-		def checkFirmPreds(scores,margin=0.05):
-			tmp = (torch.zeros(len(scores))-1.).type(device.FloatTensor)
-			tmp1 = 2*(scores>(0.5+margin)).type(device.FloatTensor).squeeze()
-			tmp2 = (scores<(0.5-margin)).type(device.FloatTensor).squeeze()
-			tmp = tmp+tmp1+tmp2
-			return tmp
+		# def checkFirmPreds(scores,margin=0.05):
+		# 	tmp = (torch.zeros(len(scores))-1.).type(device.FloatTensor)
+		# 	tmp1 = 2*(scores>(0.5+margin)).type(device.FloatTensor).squeeze()
+		# 	tmp2 = (scores<(0.5-margin)).type(device.FloatTensor).squeeze()
+		# 	tmp = tmp+tmp1+tmp2
+		# 	return tmp
 
-		# part 2: if advclss_outs agree with labels (>0.52), sup on last step of seq2att, also sup on the last att of seq2att
-		adv_scores, adv_attn = advclss_outs  # (16,1), (16,1,204)
-		adv_labels = checkFirmPreds(adv_scores)
-		agree_mask = adv_labels.data.eq(labels.data)
+		# # part 2: if advclss_outs agree with labels (>0.52), sup on last step of seq2att, also sup on the last att of seq2att
+		# adv_scores, adv_attn = advclss_outs  # (16,1), (16,1,204)
+		# adv_labels = checkFirmPreds(adv_scores)
+		# agree_mask = adv_labels.data.eq(labels.data)
 
-			# find index of 1 in agree mask
-		active_indices = (agree_mask != 0).nonzero().squeeze()
-			# gather target scores, attns
-		ac_scores = scores[active_indices].view(-1,steps)
-		ac_attns = attns[active_indices].view(-1,steps,max_len)
-		ac_out_lens = out_lens[active_indices].view(-1)
+		# 	# find index of 1 in agree mask
+		# active_indices = (agree_mask != 0).nonzero().squeeze()
+		# 	# gather target scores, attns
+		# ac_scores = scores[active_indices].view(-1,steps)
+		# ac_attns = attns[active_indices].view(-1,steps,max_len)
+		# ac_out_lens = out_lens[active_indices].view(-1)
 
-		loss2 = 0.
-		if len(ac_out_lens)>=1:
-			ac_scores = ac_scores.gather(1,(ac_out_lens-1).unsqueeze(1))
-			ac_attns = ac_attns.gather(1,(ac_out_lens-1).unsqueeze(1).unsqueeze(2).repeat(1,1,max_len))
-			# calc loss
-			ac_adv_scores = labels[active_indices] #adv_scores[active_indices]
-			ac_adv_attn = adv_attn[active_indices]
-			loss2_1 = -torch.sum((ac_adv_scores*torch.log(ac_scores+1e-18)+(1 - ac_adv_scores)*torch.log(1-ac_scores+1e-18)))/len(active_indices)
-			loss2_2 = torch.sum((ac_adv_attn - ac_attns)**2)/len(active_indices)
-			loss2 = loss2_1+loss2_2
+		# assert(len(ac_out_lens)==len(active_indices))
+		# loss2 = 0.
+		# if len(ac_out_lens)>=1:
+		# 	ac_scores = ac_scores.gather(1,(ac_out_lens-1).unsqueeze(1))
+		# 	ac_attns = ac_attns.gather(1,(ac_out_lens-1).unsqueeze(1).unsqueeze(2).repeat(1,1,max_len))
+		# 	# calc loss
+		# 	ac_adv_scores = labels[active_indices] #adv_scores[active_indices]
+		# 	ac_adv_attn = adv_attn[active_indices]
+		# 	loss2_1 = -torch.sum((ac_adv_scores*torch.log(ac_scores+1e-18)+(1 - ac_adv_scores)*torch.log(1-ac_scores+1e-18)))/len(active_indices)
+		# 	loss2_2 = torch.sum((ac_adv_attn - ac_attns)**2)/len(active_indices)
+		# 	loss2 = loss2_1+loss2_2
 
 		# part 3: don't forget to train advclss
-		loss3 = -torch.sum((labels*torch.log(adv_scores+1e-18)+(1-labels)*torch.log(1-adv_scores+1e-18)))/batch_size
+		# loss3 = -torch.sum((labels*torch.log(adv_scores+1e-18)+(1-labels)*torch.log(1-adv_scores+1e-18)))/batch_size
 
-		return loss1, loss2, loss3
+		return loss1#, loss2, loss3
 
 
+class AdvCriterion(nn.Module):
+	"""docstring for Criterion"""
+	def __init__(self):
+		super(AdvCriterion, self).__init__()
 
+	def forward(self, advclss_outs, labels):
+		orig_outs, left_outs = advclss_outs
+		batch_size = len(orig_outs)
+		loss2_1 = -torch.sum((labels*torch.log(orig_outs+1e-18)+(1-labels)*torch.log(1-orig_outs+1e-18)))/batch_size
+		loss2_2 = -torch.sum((labels*torch.log(left_outs+1e-18)+(1-labels)*torch.log(1-left_outs+1e-18)))/batch_size
+		loss2 = loss2_1+loss2_2
+		return loss2
 
 
 

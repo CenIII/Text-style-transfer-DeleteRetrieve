@@ -67,7 +67,7 @@ class DecoderRNN(BaseRNN):
     KEY_SCORE = 'score'
     KEY_LENGTH = 'length'
     # KEY_SEQUENCE = 'sequence'
-    KEY_LEFT_OVER = 'left_over'
+    # KEY_LEFT_OVER = 'left_over'
 
 
     def __init__(self, output_size, max_len, hidden_size,
@@ -84,23 +84,10 @@ class DecoderRNN(BaseRNN):
         if use_attention:
             self.attention = Attention(2048)
 
-        self.out = nn.Linear(2048, self.output_size)
-
-    def getLeftOver(self, attns, out_lens, encoder_outputs):
-        attns = torch.cat(attns,dim=1) # (batchSize, steps, numHiddens)  [16, 30, 463]
-        batchSize, _, numHiddens = attns.shape
-        left_over = [] # should be 16x463
-        def do_mult(x1, x2): return x1 * x2
-        for i in range(batchSize):
-            effAtts = 1. - attns[i,:out_lens[i]]
-            leftAtt = reduce(do_mult, effAtts)
-
-            left_over.append(encoder_outputs[i]*(leftAtt.unsqueeze(1)))
-        left_over = torch.stack(left_over, dim=0)
-        return left_over
+        # self.out = nn.Linear(2048, self.output_size)
 
 
-    def forward_step(self, input_var, hidden, encoder_outputs, function):
+    def forward_step(self, input_var, hidden, encoder_outputs, function, advclss=None):
         batch_size = input_var.size(0)
         output_size = input_var.size(1)
         embedded = torch.zeros([batch_size, 1, 300]) 
@@ -114,18 +101,18 @@ class DecoderRNN(BaseRNN):
             # todo: use part of encoder_outputs for att
             output, attn = self.attention(output[:,:,:2048], encoder_outputs)
 
-        predicted_score = function(self.out(output.contiguous().view(-1, 2048))).view(batch_size, output_size, -1)
+        predicted_score = advclss(output.contiguous().view(-1, 2048), is_sent_emb=True).view(batch_size, output_size, -1) #function()
         return predicted_score, hidden, attn
 
-    def forward(self, inputs=None, style_embd=None, encoder_hidden=None, encoder_outputs=None, labels=None,
+    def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None, advclss=None, labels=None,
                     function=F.sigmoid):
         ret_dict = dict()
         if self.use_attention:
             ret_dict[DecoderRNN.KEY_ATTN_SCORE] = list()
 
         # todo: cat to both hidden and cell state
-        style_embd = style_embd.unsqueeze(0)
-        encoder_hidden = (torch.cat((encoder_hidden[0],style_embd),2), torch.cat((encoder_hidden[1],style_embd),2))
+        # style_embd = style_embd.unsqueeze(0)
+        # encoder_hidden = (torch.cat((encoder_hidden[0],style_embd),2), torch.cat((encoder_hidden[1],style_embd),2))
 
         inputs, batch_size, max_length = self._validate_args(inputs, encoder_hidden, encoder_outputs,
                                                              function)
@@ -134,22 +121,26 @@ class DecoderRNN(BaseRNN):
         decoder_outputs = []
         lengths = np.array([max_length] * batch_size)
 
-        def getEOS(step_output, labels):
-            tmp1 = labels & step_output.data.le(0.5+self.MARGIN).type(device.LongTensor).squeeze()
-            tmp2 = (1-labels) & step_output.data.ge(0.5-self.MARGIN).type(device.LongTensor).squeeze()
+        def getEOS(left_value, labels):
+            tmp1 = labels & left_value.data.le(0.5+self.MARGIN).type(device.LongTensor).squeeze()
+            tmp2 = (1-labels) & left_value.data.ge(0.5-self.MARGIN).type(device.LongTensor).squeeze()
             return (tmp1+tmp2).unsqueeze(1)
             
-        def decode(step, step_output, step_attn):
+        def decode(step, step_output, step_attn, left_value):
             decoder_outputs.append(step_output)
             if self.use_attention:
                 ret_dict[DecoderRNN.KEY_ATTN_SCORE].append(step_attn)
 
-            eos_batches = getEOS(step_output, labels)
+            eos_batches = getEOS(left_value, labels)
             if eos_batches.dim() > 0:
                 eos_batches = eos_batches.cpu().view(-1).numpy()
                 update_idx = ((lengths > step) & eos_batches) != 0
                 lengths[update_idx] = len(decoder_outputs)
             return
+
+        def updateEncOutputs(encoder_outputs, step_attn):  # (batchsize,1,hiddensize) (batchsize,1,hiddensize)
+            encoder_outputs = encoder_outputs*(1-step_attn) # todo: is it correct?
+            return encoder_outputs
 
         # Manual unrolling is used to support random teacher forcing.
         decoder_input = inputs[:, 0].unsqueeze(1)
@@ -157,12 +148,15 @@ class DecoderRNN(BaseRNN):
             decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                      function=function)
             step_output = decoder_output.squeeze(1)
-            decode(di, step_output, step_attn)
+            encoder_outputs = updateEncOutputs(encoder_outputs, step_attn)
+            left_value = advclss(encoder_outputs)
+            decode(di, step_output, step_attn, left_value)
+            
 
         ret_dict[DecoderRNN.KEY_SCORE] = decoder_outputs
         ret_dict[DecoderRNN.KEY_LENGTH] = lengths.tolist()
 
-        ret_dict[DecoderRNN.KEY_LEFT_OVER] = self.getLeftOver(ret_dict[DecoderRNN.KEY_ATTN_SCORE], ret_dict[DecoderRNN.KEY_LENGTH], encoder_outputs)
+        # ret_dict[DecoderRNN.KEY_LEFT_OVER] = self.getLeftOver(ret_dict[DecoderRNN.KEY_ATTN_SCORE], ret_dict[DecoderRNN.KEY_LENGTH], encoder_outputs)
 
         return ret_dict
 
