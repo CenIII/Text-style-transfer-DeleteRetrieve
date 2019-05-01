@@ -146,6 +146,7 @@ class AdvClassifier(nn.Module):
 			sent_emb = attention@hiddens
 			avg_sent_emb = torch.sum(sent_emb,1)/self.r
 		else:
+			attention = None
 			avg_sent_emb = sent_emb
 		output = F.sigmoid(self.linear_final(avg_sent_emb))
 		return output,attention
