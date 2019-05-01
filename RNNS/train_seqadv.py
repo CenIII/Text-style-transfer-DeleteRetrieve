@@ -21,6 +21,7 @@ def saveStateDict(seq2att,advclss):
 	models['seq2att'] = seq2att.state_dict()
 	models['advclss'] = advclss.state_dict()
 	torch.save(models, './seq2att.pt')
+	return
 
 def train(loader, net, advclss, crit1, crit2):
 	print('start to train...')
